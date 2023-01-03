@@ -174,7 +174,7 @@ def calculate_all_energies(N, J):
     #Now create a second list of all possible unique energies:
     poss_energies = np.unique(all_energies)
     
-    #print(all_energies, all_configs)
+    print(poss_energies)
     return all_energies, all_configs, poss_energies
         
 #######################################################################
