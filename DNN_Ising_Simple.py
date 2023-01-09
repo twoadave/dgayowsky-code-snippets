@@ -462,4 +462,4 @@ model = NeuralNetwork().to(device)'''
 network_passes = 10
 percentage_correct, training_losses = pass_to_NN(network_passes, 25, 0.0003, 4, 1)
 print('Percent of correctly predicted energies: ' + str(percentage_correct))
-#plot_training_losses(training_losses, network_passes)
+plot_training_losses(training_losses, network_passes)
