@@ -397,11 +397,17 @@ def pass_to_NN(network_passes, batch_sze, learning_rate, N, J):
     
     #Initialize loss value.
     training_pass_loss = 0
+    #Initialize array to store our loss values.
+    training_losses = []
     
     #Make our training passes over the network.
     for i in range(1, network_passes+1):
         #Call our training NN.
-        train_NN(model, loss_fn, optimizer, train_dataloader, training_pass_loss)
+        training_step_loss = train_NN(model, loss_fn, optimizer, train_dataloader, training_pass_loss)
+        #Print out our training step loss.
+        print(training_step_loss)
+        #And append it to an array to store it.
+        training_losses.append(training_step_loss)
     
     #Test our neural network.
     energies_test_list, energies_pred_list = test_NN(model, test_dataloader)
@@ -418,9 +424,20 @@ def pass_to_NN(network_passes, batch_sze, learning_rate, N, J):
     #And then calculate our correct percentage of values.
     percentage_correct = diagonal_sum/len(energies_test_list) * 100
     
-    return percentage_correct
+    return percentage_correct, training_losses
     
+#Define a functon to plot our training losses across each step.
+def plot_training_losses(training_losses, network_passes):
     
+    step_vals = np.arange(1, network_passes+1, 1)
+
+    plt.plot(step_vals, training_losses, marker ='o', markersize = 2)
+    plt.xlabel('Epoch (Network Pass) Number')
+    plt.ylabel('Log Loss (Training Loss)')
+    plt.title('Log Loss (Training Loss) of Simple Ising DNN per Epoch \n')
+    plt.show()
+
+
 #16 input nodes ie -1, 1s, and increase nodes as we go through layers, then decrease
 #And then number of classes is the number of possible energies
 '''self.layer_1 = nn.Linear(16, 64) 
@@ -442,5 +459,7 @@ model = NeuralNetwork().to(device)'''
 
 #create_training_testing_data(4, 1)
 
-percentage_correct = pass_to_NN(10, 25, 0.0003, 4, 1)
+network_passes = 10
+percentage_correct, training_losses = pass_to_NN(network_passes, 25, 0.0003, 4, 1)
 print('Percent of correctly predicted energies: ' + str(percentage_correct))
+#plot_training_losses(training_losses, network_passes)
