@@ -13,6 +13,7 @@ import numpy as np
 import math 
 import torch
 import matplotlib.pyplot as plt
+import copy
 import os
 import torch.optim as optim
 import torch.nn as nn
@@ -483,10 +484,34 @@ model = NeuralNetwork().to(device)'''
 #Now we want to write the functions that will allow us to do our Metropolis algorithm.
 
 #Calculate configuration energy by passing to NN:
-def calc_Ising_E(config):
-    #Placeholder while I write this function...
-    config_E = 1
-    return config_E
+def calc_Ising_E(model, config):
+
+    #Recreate testing data but it's just the one config...
+    config_predict = copy.deepcopy(config)
+    config_predict = config_predict.flatten('C')
+    config_predict = torch.tensor(config_predict)
+
+    #Send config to device...
+
+    with torch.no_grad():
+        #Put our model into testing mode:
+        model.eval()
+      
+        config_predict = config_predict.to(device)
+        #Generate our predicted energy:
+        energy_test_pred = model(config_predict.float())
+        _, energy_pred_tags = torch.max(energy_test_pred, dim = 1)
+        energy_pred = energy_pred_tags.cpu().numpy()
+    
+    #More x-files theme music???
+    #energies_pred_list = [a.squeeze().tolist() for a in energies_pred_list]
+    #energies_test_list = [a.squeeze().tolist() for a in energies_test_list]
+    
+    #Well we throw all these lists together here.
+    #energies_test_list = merger(energies_test_list)
+    #energies_pred_list = merger(energies_pred_list)
+
+    return energy_pred
 
 #Calculate change in energy, using old stored config energy and new DNN config energy:
 def calc_DeltaE(config, prev_E):
@@ -518,8 +543,34 @@ def calc_relativeprob(J, DeltaE, inv_Beta):
     return P  
 
 #Write function to find and plot Ising lattice configurations.
-def ising_MH(inv_Beta, J, N, B, mu, numsteps):
+def ising_MH(inv_Beta, J, N, B, mu, numsteps, network_passes, batch_sze, learning_rate):
     
+    #First we need to train our neural network, so get this going.
+    model = NeuralNetwork().to(device)
+    #Declare our loss function and optimizer.
+    loss_fn = nn.CrossEntropyLoss()
+    optimizer = optim.Adam(model.parameters(), learning_rate)
+    training_dataset, testing_dataset, poss_energies = create_training_testing_data(N, J)
+    #Here each batch is some set of configurations and energies.
+    train_dataloader = DataLoader(training_dataset, batch_sze, drop_last = True, shuffle = True)
+
+    #Initialize loss value.
+    training_pass_loss = 0
+    #Initialize array to store our loss values.
+    training_losses = []
+    
+    #Make our training passes over the network.
+    for i in range(1, network_passes+1):
+        #Call our training NN.
+        training_step_loss = train_NN(model, loss_fn, optimizer, train_dataloader, training_pass_loss)
+        #Print out our training step loss.
+        print(training_step_loss)
+        #And append it to an array to store it.
+        training_losses.append(training_step_loss)
+
+    ###############################################################################################
+    #Now start our Metropolis algorithm.
+
     #Initialize random NxN array of spins.
     #This actually makes random array of 0s and 1s, so let 0s be spin downs.
     config = np.random.randint(0, 2, (N,N))
@@ -537,8 +588,12 @@ def ising_MH(inv_Beta, J, N, B, mu, numsteps):
         i = np.random.randint(0,N)
         j = np.random.randint(0,N)
         
+        #Set up our test config:
+        test_config = copy.deepcopy(config)
+        test_config[i,j] = -1*test_config[i,j]
+
         #Calculate our change in energy and current configuration energy.
-        DeltaE, config_E = calc_DeltaE(config, prev_E)
+        DeltaE, config_E = calc_DeltaE(test_config, prev_E)
         
         #If our change in energy is negative, accept right away.
         if DeltaE <= 0:
@@ -557,3 +612,9 @@ def ising_MH(inv_Beta, J, N, B, mu, numsteps):
                 prev_E = config_E
             else:
                 pass
+    
+    plt.imshow(config, cmap='gray')
+    plt.xlabel('Lattice Index')
+    plt.ylabel('Lattice Index')
+    plt.title('Behaviour of ' + str(N) + ' by ' + str(N) + ' Ising Lattice \n B = ' + str(B) + ' at kT = ' + str(inv_Beta))
+    plt.savefig(str(n) + '.png')
