@@ -427,16 +427,37 @@ def pass_to_NN(network_passes, batch_sze, learning_rate, N, J):
     return percentage_correct, training_losses
     
 #Define a functon to plot our training losses across each step.
-def plot_training_losses(training_losses, network_passes):
+def plot_training_losses(training_losses, network_passes, percentage_correct):
     
     step_vals = np.arange(1, network_passes+1, 1)
 
     plt.plot(step_vals, training_losses, marker ='o', markersize = 2)
     plt.xlabel('Epoch (Network Pass) Number')
-    plt.ylabel('Log Loss (Training Loss)')
-    plt.title('Log Loss (Training Loss) of Simple Ising DNN per Epoch \n')
+    plt.ylabel('Cross Entropy Loss')
+    plt.title('Cross Entropy Loss of Simple Ising DNN per Epoch \n' + str(network_passes) + ' Epochs, ' + str(round(percentage_correct, 3)) + ' % Correctly Predicted Energies')
     plt.show()
 
+#Define a function to record total number of correct energies as a function of minimum training loss.
+def loss_and_percentage_correct(max_network_passes, batch_sze, learning_rate, N, J):
+    min_losses = []
+    percentages_correct = []
+
+    for i in range(1,max_network_passes):
+        percentage_correct, training_losses = pass_to_NN(i, 25, 0.0003, 4, 1)
+        min_losses.append(min(training_losses))
+        percentages_correct.append(percentage_correct)
+
+    min_losses = np.asarray(min_losses)
+    min_losses_rev = min_losses[::-1]
+    percentages_correct = np.asarray(percentages_correct)
+    percentages_correct_rev = percentages_correct[::-1]
+
+    plt.plot(min_losses_rev, percentages_correct_rev, marker ='o', markersize = 2)
+    plt.xlim(max(min_losses_rev)+25, min(min_losses_rev)-25)
+    plt.xlabel('Minimum Cross Entropy Loss')
+    plt.ylabel('Percentage of Correctly Predicted Energies')
+    plt.title('Percentage of Correctly Predicted Energies as a Function of Minimum Cross Entropy Loss \n Increasing Number of Epochs to Reduce Loss')
+    plt.show()
 
 #16 input nodes ie -1, 1s, and increase nodes as we go through layers, then decrease
 #And then number of classes is the number of possible energies
@@ -459,7 +480,9 @@ model = NeuralNetwork().to(device)'''
 
 #create_training_testing_data(4, 1)
 
-network_passes = 10
-percentage_correct, training_losses = pass_to_NN(network_passes, 25, 0.0003, 4, 1)
-print('Percent of correctly predicted energies: ' + str(percentage_correct))
-plot_training_losses(training_losses, network_passes)
+#network_passes = 50
+#percentage_correct, training_losses = pass_to_NN(network_passes, 25, 0.0003, 4, 1)
+#print('Percent of correctly predicted energies: ' + str(percentage_correct))
+#plot_training_losses(training_losses, network_passes, percentage_correct)
+
+loss_and_percentage_correct(50,  25, 0.0003, 4, 1)
