@@ -482,7 +482,18 @@ model = NeuralNetwork().to(device)'''
 
 #Now we want to write the functions that will allow us to do our Metropolis algorithm.
 
-#Calculate change in energy, old stored config energy and new DNN config energy:
+#Calculate configuration energy by passing to NN:
+def calc_Ising_E(config):
+    #Placeholder while I write this function...
+    config_E = 1
+    return config_E
+
+#Calculate change in energy, using old stored config energy and new DNN config energy:
+def calc_DeltaE(config, prev_E):
+    config_E = calc_Ising_E(config)
+    DeltaE = config_E - prev_E
+
+    return DeltaE, config_E
 
 #Write function to calculate the magnetization.
 def calc_magnetization(config, N):
@@ -515,6 +526,9 @@ def ising_MH(inv_Beta, J, N, B, mu, numsteps):
     
     #Convert our zeros to -1s...
     config[config == 0] = -1
+
+    #Calculate our initial energy by passing to DNN:
+    prev_E = calc_Ising_E(config)
     
     #For the number of steps we want to take, flip a spin each time.
     for n in range(numsteps):
@@ -523,12 +537,14 @@ def ising_MH(inv_Beta, J, N, B, mu, numsteps):
         i = np.random.randint(0,N)
         j = np.random.randint(0,N)
         
-        #Calculate our change in energy.
-        DeltaE = calc_DeltaE(J, B, mu, config, i, j, N)
+        #Calculate our change in energy and current configuration energy.
+        DeltaE, config_E = calc_DeltaE(config, prev_E)
         
         #If our change in energy is negative, accept right away.
         if DeltaE <= 0:
             config[i,j] = -1*config[i,j]
+            #Set our new "previous" energy for the next iteration.
+            prev_E = config_E
         
         #If our change in energy is positive, generate random uniform variable and compare.
         else: 
@@ -538,15 +554,6 @@ def ising_MH(inv_Beta, J, N, B, mu, numsteps):
             #Accept/reject condition:
             if u <= P:
                 config[i,j] = -1*config[i,j]
+                prev_E = config_E
             else:
                 pass
-        
-        #Now we take a snapshot at every 200 steps... these are automatically saved to file.
-        #if n % 200 == 0:
-        #    plt.imshow(config, cmap='gray')
-        #    plt.xlabel('Lattice Index')
-        #    plt.ylabel('Lattice Index')
-        #    plt.title('Behaviour of ' + str(N) + ' by ' + str(N) + ' Ising Lattice \n B = ' + str(B) + ' at kT = ' + str(inv_Beta))
-        #    plt.savefig(str(n) + '.png')
-        #else:
-        #    pass
