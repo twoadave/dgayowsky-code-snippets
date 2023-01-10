@@ -514,8 +514,8 @@ def calc_Ising_E(model, config):
     return energy_pred
 
 #Calculate change in energy, using old stored config energy and new DNN config energy:
-def calc_DeltaE(config, prev_E):
-    config_E = calc_Ising_E(config)
+def calc_DeltaE(model, config, prev_E):
+    config_E = calc_Ising_E(model, config)
     DeltaE = config_E - prev_E
 
     return DeltaE, config_E
@@ -579,7 +579,7 @@ def ising_MH(inv_Beta, J, N, B, mu, numsteps, network_passes, batch_sze, learnin
     config[config == 0] = -1
 
     #Calculate our initial energy by passing to DNN:
-    prev_E = calc_Ising_E(config)
+    prev_E = calc_Ising_E(model, config)
     
     #For the number of steps we want to take, flip a spin each time.
     for n in range(numsteps):
@@ -593,7 +593,7 @@ def ising_MH(inv_Beta, J, N, B, mu, numsteps, network_passes, batch_sze, learnin
         test_config[i,j] = -1*test_config[i,j]
 
         #Calculate our change in energy and current configuration energy.
-        DeltaE, config_E = calc_DeltaE(test_config, prev_E)
+        DeltaE, config_E = calc_DeltaE(model, test_config, prev_E)
         
         #If our change in energy is negative, accept right away.
         if DeltaE <= 0:
@@ -618,3 +618,8 @@ def ising_MH(inv_Beta, J, N, B, mu, numsteps, network_passes, batch_sze, learnin
     plt.ylabel('Lattice Index')
     plt.title('Behaviour of ' + str(N) + ' by ' + str(N) + ' Ising Lattice \n B = ' + str(B) + ' at kT = ' + str(inv_Beta))
     plt.savefig(str(n) + '.png')
+
+####################################################################################
+
+#Main: Let's run some functions:
+ising_MH(1, 1, 4, 0, 0, 3, 10, 25, 0.0003)
