@@ -365,13 +365,12 @@ def test_NN(model, test_dataloader):
         energies_pred_list.append(energies_pred_tags.cpu().numpy())
         energies_test_list.append(energies_batch)
     
-    #More x-files theme music???
-    energies_pred_list = [a.squeeze().tolist() for a in energies_pred_list]
-    energies_test_list = [a.squeeze().tolist() for a in energies_test_list]
-    
-    #Well we throw all these lists together here.
-    energies_test_list = merger(energies_test_list)
-    energies_pred_list = merger(energies_pred_list)
+    if len(energies_pred_list) > 1:
+        energies_pred_list = [a.squeeze().tolist() for a in energies_pred_list]
+        energies_test_list = [a.squeeze().tolist() for a in energies_test_list]
+        #Well we throw all these lists together here.
+        energies_test_list = merger(energies_test_list)
+        energies_pred_list = merger(energies_pred_list)
     
     return energies_test_list, energies_pred_list
 
@@ -487,35 +486,30 @@ model = NeuralNetwork().to(device)'''
 def calc_Ising_E(model, config):
 
     #Recreate testing data but it's just the one config...
-    config_predict = copy.deepcopy(config)
-    config_predict = config_predict.flatten('C')
+    send_config = copy.deepcopy(config)
+    config_predict = []
+    config_predict.append(send_config.flatten('C'))
     config_predict = torch.tensor(config_predict)
 
-    #Send config to device...
+    #Make up a fake resultant energy...
+    config_energy = torch.tensor([0])
 
-    with torch.no_grad():
-        #Put our model into testing mode:
-        model.eval()
-      
-        config_predict = config_predict.to(device)
-        #Generate our predicted energy:
-        energy_test_pred = model(config_predict.float())
-        _, energy_pred_tags = torch.max(energy_test_pred, dim = 1)
-        energy_pred = energy_pred_tags.cpu().numpy()
-    
-    #More x-files theme music???
-    #energies_pred_list = [a.squeeze().tolist() for a in energies_pred_list]
-    #energies_test_list = [a.squeeze().tolist() for a in energies_test_list]
-    
-    #Well we throw all these lists together here.
-    #energies_test_list = merger(energies_test_list)
-    #energies_pred_list = merger(energies_pred_list)
+    #Now make this into a tensor...
+    config_dataset = TensorDataset(config_predict, config_energy)
+    config_dataloader = DataLoader(config_dataset, 1)
 
-    return energy_pred
+    #Send config to device and calculate our energy...
+    energies_test_list, energies_pred_list = test_NN(model, config_dataloader)
+
+    return energies_pred_list
 
 #Calculate change in energy, using old stored config energy and new DNN config energy:
-def calc_DeltaE(model, config, prev_E):
-    config_E = calc_Ising_E(model, config)
+def calc_DeltaE(model, config, prev_E, poss_energies):
+    config_E_list = calc_Ising_E(model, config)
+    config_E_index = config_E_list[0]
+    config_E = poss_energies[config_E_index]
+    config_E = config_E[0]
+    print(config_E)
     DeltaE = config_E - prev_E
 
     return DeltaE, config_E
@@ -579,7 +573,9 @@ def ising_MH(inv_Beta, J, N, B, mu, numsteps, network_passes, batch_sze, learnin
     config[config == 0] = -1
 
     #Calculate our initial energy by passing to DNN:
-    prev_E = calc_Ising_E(model, config)
+    prev_E_list = calc_Ising_E(model, config)
+    prev_E_index = prev_E_list[0]
+    prev_E = poss_energies[prev_E_index]
     
     #For the number of steps we want to take, flip a spin each time.
     for n in range(numsteps):
@@ -593,7 +589,7 @@ def ising_MH(inv_Beta, J, N, B, mu, numsteps, network_passes, batch_sze, learnin
         test_config[i,j] = -1*test_config[i,j]
 
         #Calculate our change in energy and current configuration energy.
-        DeltaE, config_E = calc_DeltaE(model, test_config, prev_E)
+        DeltaE, config_E = calc_DeltaE(model, test_config, prev_E, poss_energies)
         
         #If our change in energy is negative, accept right away.
         if DeltaE <= 0:
@@ -617,9 +613,10 @@ def ising_MH(inv_Beta, J, N, B, mu, numsteps, network_passes, batch_sze, learnin
     plt.xlabel('Lattice Index')
     plt.ylabel('Lattice Index')
     plt.title('Behaviour of ' + str(N) + ' by ' + str(N) + ' Ising Lattice \n B = ' + str(B) + ' at kT = ' + str(inv_Beta))
-    plt.savefig(str(n) + '.png')
+    #plt.savefig(str(n) + '.png')
+    plt.show()
 
 ####################################################################################
 
 #Main: Let's run some functions:
-ising_MH(1, 1, 4, 0, 0, 3, 10, 25, 0.0003)
+ising_MH(1, 1, 4, 0, 0, 15, 10, 25, 0.0003)
