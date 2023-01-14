@@ -509,7 +509,7 @@ def calc_DeltaE(model, config, prev_E, poss_energies):
     config_E_index = config_E_list[0]
     config_E = poss_energies[config_E_index]
     config_E = config_E[0]
-    print(config_E)
+    #print(config_E)
     DeltaE = config_E - prev_E
 
     return DeltaE, config_E
@@ -609,14 +609,153 @@ def ising_MH(inv_Beta, J, N, B, mu, numsteps, network_passes, batch_sze, learnin
             else:
                 pass
     
-    plt.imshow(config, cmap='gray')
-    plt.xlabel('Lattice Index')
-    plt.ylabel('Lattice Index')
-    plt.title('Behaviour of ' + str(N) + ' by ' + str(N) + ' Ising Lattice \n B = ' + str(B) + ' at kT = ' + str(inv_Beta))
+    #plt.imshow(config, cmap='gray')
+    #plt.xlabel('Lattice Index')
+    #plt.ylabel('Lattice Index')
+    #plt.title('Behaviour of ' + str(N) + ' by ' + str(N) + ' Ising Lattice \n B = ' + str(B) + ' at kT = ' + str(inv_Beta))
     #plt.savefig(str(n) + '.png')
+    #plt.show()
+
+#Write function to calculate the magnetization.
+def calc_magnetization(config, N):
+    #Here we want to plot the average magnetization as 1/beta scales.
+    #beta = 1/kT --> 1/beta = kT
+    #Average magnetization = spin per particle, should be between 0 and 1.
+    
+    #Sum of all magnetizations for the configuration, divided by number of particles.
+    #Recall we have N^2 particles.
+    
+    mag = np.sum(config)
+    avgmag = (1/(N**2))*mag
+    
+    return avgmag
+
+#Write function to find our average magnetization.
+def average_magnetization(J, N, B, mu, minbeta, maxbeta, numsteps, network_passes, batch_sze, learning_rate, model, poss_energies):
+    #Average magnetization = avg spin per particle, should be between 0 and 1.
+    #Note here, beta is used as an abbreviation for inverse beta.
+    
+    #Initialize values array.
+    avgmagvals = []
+    
+    #Calculate step size in kT and which values we're taking.
+    stepsize = (maxbeta-minbeta)/numsteps
+    betasteps = np.arange(minbeta, maxbeta, stepsize)
+
+    #Initialize random NxN array of spins.
+    #This actually makes random array of 0s and 1s, so let 0s be spin downs.
+    config = np.random.randint(0, 2, (N,N))
+    
+    #Convert our zeros to -1s...
+    config[config == 0] = -1
+
+    #Calculate our initial energy by passing to DNN:
+    prev_E_list = calc_Ising_E(model, config)
+    prev_E_index = prev_E_list[0]
+    prev_E = poss_energies[prev_E_index]
+    
+    #For the number of steps we want to take, flip a spin each time.
+    for n in range(numsteps):
+        
+        #Generate the random spot we want to flip a spin at.
+        i = np.random.randint(0,N)
+        j = np.random.randint(0,N)
+        
+        #Set up our test config:
+        test_config = copy.deepcopy(config)
+        test_config[i,j] = -1*test_config[i,j]
+
+        #Calculate our change in energy and current configuration energy.
+        DeltaE, config_E = calc_DeltaE(model, test_config, prev_E, poss_energies)
+        
+        #If our change in energy is negative, accept right away.
+        if DeltaE <= 0:
+            config[i,j] = -1*config[i,j]
+            #Set our new "previous" energy for the next iteration.
+            prev_E = config_E
+        
+        #If our change in energy is positive, generate random uniform variable and compare.
+        else: 
+            P = calc_relativeprob(J, DeltaE, betasteps[n])
+            u = np.random.uniform()
+            
+            #Accept/reject condition:
+            if u <= P:
+                config[i,j] = -1*config[i,j]
+                prev_E = config_E
+            else:
+                pass
+        
+        #Calculate the magnetization and append to array of values.
+        avg_mag = calc_magnetization(config, N)
+        avgmagvals.append(avg_mag)
+    
+    return avgmagvals
+
+#Write a function to find average magnetization and plot.
+def average_magnetization_mean(J, N, B, mu, minbeta, maxbeta, numsteps, numavg, network_passes, batch_sze, learning_rate):
+    
+    #Here we're going to run average_magnetization, and take the average for multiple values. 
+    #See if we can get something more accurate.
+    
+    #Initialize values array.
+    avg_mag_all = []
+    
+    #Generate beta steps and step size.
+    stepsize = (maxbeta-minbeta)/numsteps
+    betasteps = np.arange(minbeta, maxbeta, stepsize)
+
+    #First we need to train our neural network, so get this going.
+    model = NeuralNetwork().to(device)
+    #Declare our loss function and optimizer.
+    loss_fn = nn.CrossEntropyLoss()
+    optimizer = optim.Adam(model.parameters(), learning_rate)
+    training_dataset, testing_dataset, poss_energies = create_training_testing_data(N, J)
+    #Here each batch is some set of configurations and energies.
+    train_dataloader = DataLoader(training_dataset, batch_sze, drop_last = True, shuffle = True)
+
+    #Initialize loss value.
+    training_pass_loss = 0
+    #Initialize array to store our loss values.
+    training_losses = []
+    
+    #Make our training passes over the network.
+    for i in range(1, network_passes+1):
+        #Call our training NN.
+        training_step_loss = train_NN(model, loss_fn, optimizer, train_dataloader, training_pass_loss)
+        #Print out our training step loss.
+        print(training_step_loss)
+        #And append it to an array to store it.
+        training_losses.append(training_step_loss)
+
+    ###############################################################################################
+    #Now start our Metropolis algorithm.
+    
+    #Take values for the number of samples we want for each average.
+    for i in range(numavg):
+        
+        #Calculate average magnetization...
+        avg_mag_func_beta = average_magnetization(J, N, B, mu, minbeta, maxbeta, numsteps, network_passes, batch_sze, learning_rate, model, poss_energies)
+        
+        #Do do dooo some average stuff.
+        if i == 0:
+            avg_mag_all = avg_mag_func_beta.copy()
+        else:
+            avg_mag_all = np.vstack((avg_mag_all, avg_mag_func_beta))
+    
+    #Taking the average...
+    avg_mag_mean_val = np.sum(avg_mag_all, axis = 0)  
+    avg_mag_mean_val = avg_mag_mean_val/numavg
+    
+    #Now we plot!
+    plt.plot(betasteps, avg_mag_mean_val, marker ='o', markersize = 1, linestyle = 'none')
+    plt.xlabel(r'$\beta^{-1} = kT$')
+    plt.ylabel(r'$\langle M \rangle$')
+    plt.title('Average Magnetization as a Function of Temperature \n' + str(N) + ' by ' + str(N) + ' Lattice, B = ' + str(B) + '\n')
     plt.show()
 
 ####################################################################################
 
 #Main: Let's run some functions:
-ising_MH(1, 1, 4, 0, 0, 15, 10, 25, 0.0003)
+#ising_MH(1, 1, 4, 0, 0, 15, 10, 25, 0.0003)
+average_magnetization_mean(1, 4, 0, 0, 0, 8, 250, 5000, 25, 25, 0.0003)
