@@ -485,4 +485,4 @@ percentage_correct, training_losses = pass_to_NN(network_passes, 25, 0.0003, 4, 
 #print('Percent of correctly predicted energies: ' + str(percentage_correct))
 #plot_training_losses(training_losses, network_passes, percentage_correct)
 
-#loss_and_percentage_correct(50,  25, 0.0003, 4, 1)
+loss_and_percentage_correct(50,  25, 0.0003, 4, 1)
