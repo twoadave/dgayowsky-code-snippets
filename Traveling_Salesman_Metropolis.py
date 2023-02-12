@@ -20,8 +20,6 @@ from copy import deepcopy
 
 #######################################################################
 
-#Question 1 functions.
-
 #Define a function to generate our list of N city indices in an MxM lattice.
 #Note that these cities are already in a random order - we can save some computational time
 #by not having to generate a permutation! 
