@@ -37,12 +37,12 @@ cases for Quantum Errors:
 noise_test = NoiseModel()
 
 # Add depolarizing error to all single qubit u1, u2, u3 gates
-error = depolarizing_error(0.05, 1)
+error = depolarizing_error(0.05, 3)
 noise_test.add_all_qubit_quantum_error(error, ['u1', 'u2', 'u3'])
 
 # Example error probabilities
 p_reset = 0.03
-p_meas = 0.1
+p_meas = 0.05
 p_gate1 = 0.05
 
 # QuantumError objects
@@ -55,10 +55,10 @@ error_gate2 = error_gate1.tensor(error_gate1)
 noise_bit_flip = NoiseModel()
 noise_bit_flip.add_all_qubit_quantum_error(error_reset, "reset")
 noise_bit_flip.add_all_qubit_quantum_error(error_meas, "measure")
-noise_bit_flip.add_all_qubit_quantum_error(error_gate1, ["u1", "u2", "u3"])
+noise_bit_flip.add_all_qubit_quantum_error(error_gate1, ["ch"])
 noise_bit_flip.add_all_qubit_quantum_error(error_gate2, ["cx"])
 #Add our other previous error:
-noise_bit_flip.add_all_qubit_quantum_error(error, ['u1', 'u2', 'u3'])
+#noise_bit_flip.add_all_qubit_quantum_error(error, ['u1', 'u2', 'u3'])
 
 
 # Print noise model info
@@ -73,7 +73,7 @@ circ.measure([0, 1, 2], [0, 1, 2])
 
 # Create noisy simulator backend
 #sim_noise = AerSimulator(noise_model=noise_test)
-sim_noise = AerSimulator(noise_model=noise_bit_flip)
+sim_noise = AerSimulator(noise_model=noise_test)
 
 # Transpile circuit for noisy basis gates
 circ_tnoise = transpile(circ, sim_noise)
