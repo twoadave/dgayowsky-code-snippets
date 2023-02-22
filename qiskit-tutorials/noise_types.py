@@ -37,13 +37,13 @@ cases for Quantum Errors:
 noise_test = NoiseModel()
 
 # Add depolarizing error to all single qubit u1, u2, u3 gates
-error = depolarizing_error(0.05, 3)
+error = depolarizing_error(0.05, 1)
 noise_test.add_all_qubit_quantum_error(error, ['u1', 'u2', 'u3'])
 
 # Example error probabilities
-p_reset = 0.03
-p_meas = 0.05
-p_gate1 = 0.05
+p_reset = 0
+p_meas = 0
+p_gate1 = 0.2
 
 # QuantumError objects
 error_reset = pauli_error([('X', p_reset), ('I', 1 - p_reset)])
@@ -73,7 +73,7 @@ circ.measure([0, 1, 2], [0, 1, 2])
 
 # Create noisy simulator backend
 #sim_noise = AerSimulator(noise_model=noise_test)
-sim_noise = AerSimulator(noise_model=noise_test)
+sim_noise = AerSimulator(noise_model=noise_bit_flip)
 
 # Transpile circuit for noisy basis gates
 circ_tnoise = transpile(circ, sim_noise)
