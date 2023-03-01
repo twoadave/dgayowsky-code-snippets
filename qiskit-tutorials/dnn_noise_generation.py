@@ -47,25 +47,41 @@ def generate_measurement_error_data(meas_prob, num_shots, num_tests):
     # Transpile circuit for noisy basis gates
     circ_tnoise = transpile(circ, sim_noise)
 
-    # Run and get counts
-    result_test = sim_noise.run(circ_tnoise, shots=num_shots).result()
-    counts_test = result_test.get_counts(0)
-    print(counts_test)
-    #Outputs something like: {'001': 63, '110': 79, '101': 85, '000': 254, '010': 91, '111': 271, '011': 80, '100': 77}
-    #So how do we pull out this data?
-    #Dictionary, key:data
-    #Can we just pass a dictionary to our DNN? Or do we need to pull out counts?
-    #We'll have Noise Type which corresponds to a distribution... so think we need to just pull out counts.
-    counts_values = list(counts_test.values())
+    all_shots_counts = []
+
+    for i in range(num_tests):
+        # Run and get counts
+        result_test = sim_noise.run(circ_tnoise, shots=num_shots).result()
+        counts_test = result_test.get_counts(0)
+        counts_test = dict(sorted(counts_test.items()))
+        #print(counts_test)
+        #Outputs something like: {'001': 63, '110': 79, '101': 85, '000': 254, '010': 91, '111': 271, '011': 80, '100': 77}
+        #So how do we pull out this data?
+        #Dictionary, key:data
+        #Can we just pass a dictionary to our DNN? Or do we need to pull out counts?
+        #We'll have Noise Type which corresponds to a distribution... so think we need to just pull out counts.
+        counts_values = list(counts_test.values())
+        counts_values = np.asarray(counts_values)
+
+        #Here are our state labels for each column:
+        counts_labels = list(counts_test.keys())
+
+        if i==0:
+            all_shots_counts.append(counts_values)
+        else:
+            all_shots_counts = np.vstack([all_shots_counts, counts_values])
     
-    #Now we'll need to collect a bunch of these, and construct a tensor...
+    #print(all_shots_counts)
+        
+    #Now we want to take the average and standard deviation of each column.
+
 
     
 
 #######################################################################
 
 #Main: Let's run some functions!
-generate_measurement_error_data(0.2, 1000, 0)
+generate_measurement_error_data(0.2, 1000, 2)
 
 '''p_gate1 = 0
 
