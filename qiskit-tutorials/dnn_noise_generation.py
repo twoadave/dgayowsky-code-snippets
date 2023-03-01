@@ -26,14 +26,20 @@ from qiskit_aer.noise import (NoiseModel, QuantumError, ReadoutError,
 
 #######################################################################
 
-def generate_measurement_error_data(meas_prob, num_shots, num_tests):
+#Write a function to generate one set of error data, with single probabilities:
+def generate_error_data(meas_prob, gate_prob, num_shots, num_tests):
     
     p_meas = meas_prob
+    p_gate = gate_prob
     error_meas = pauli_error([('X',p_meas), ('I', 1 - p_meas)])
+    error_gate1 = pauli_error([('X',p_gate), ('I', 1 - p_gate)])
+    error_gate2 = error_gate1.tensor(error_gate1)
 
     # Add errors to noise model
     noise_class = NoiseModel()
     noise_class.add_all_qubit_quantum_error(error_meas, "measure")
+    noise_bit_flip.add_all_qubit_quantum_error(error_gate1, ["ch"])
+    noise_bit_flip.add_all_qubit_quantum_error(error_gate2, ["cx"])
 
     # Construct quantum circuit
     circ = QuantumCircuit(3, 3)
@@ -80,13 +86,28 @@ def generate_measurement_error_data(meas_prob, num_shots, num_tests):
     state_mean_counts = np.mean(all_shots_counts, axis=0)
     state_std_devs = np.std(all_shots_counts, axis=0)
 
-    return state_mean_counts, state_std_devs
-    
+    return state_mean_counts, state_std_devs, counts_labels
+
+#Write a function to generate all of our error data across multiple probabilities:   
+def genetate_all_error_data(min_meas_prob, max_meas_prob, min_gate_prob, max_gate_prob, num_vals, num_shots, num_tests):
+
+    #Generate error probability values:
+    meas_prob_vals = np.linspace(min_meas_prob, max_meas_prob, num_vals)
+    gate_prob_vals = np.linspace(min_gate_prob, max_gate_prob, num_vals)
+
+    #Generate data for each combination of measurement and gate errors:
+    for i in range(num_vals):
+        for j in range(num_vals):
+            
+            #Generate this data set:
+            state_mean_counts, state_std_devs, counts_labels = generate_error_data(meas_prob_vals[i], gate_prob_vals[j], num_shots, num_tests)
+            
+
 
 #######################################################################
 
 #Main: Let's run some functions!
-generate_measurement_error_data(0.2, 1000, 2)
+
 
 '''p_gate1 = 0
 
