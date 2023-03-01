@@ -12,6 +12,8 @@ running on a DNN.
 
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
+
 from qiskit import IBMQ, transpile
 from qiskit import QuantumCircuit
 from qiskit_aer import AerSimulator
@@ -74,8 +76,11 @@ def generate_measurement_error_data(meas_prob, num_shots, num_tests):
     #print(all_shots_counts)
         
     #Now we want to take the average and standard deviation of each column.
+    #Gives 1D array of mean values by column:
+    state_mean_counts = np.mean(all_shots_counts, axis=0)
+    state_std_devs = np.std(all_shots_counts, axis=0)
 
-
+    return state_mean_counts, state_std_devs
     
 
 #######################################################################
