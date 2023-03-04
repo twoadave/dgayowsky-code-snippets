@@ -142,8 +142,11 @@ def genetate_all_error_data(min_meas_prob, max_meas_prob, min_gate_prob, max_gat
     meas_prob_vals = np.linspace(min_meas_prob, max_meas_prob, num_vals)
     gate_prob_vals = np.linspace(min_gate_prob, max_gate_prob, num_vals)
 
-    all_meas_prob_vals = []
-    all_gate_prob_vals = []
+    tot_means = []
+    tot_stdevs = []
+    tot_labels = []
+    tot_meas_prob = []
+    tot_gate_prob = []
 
     #Generate data for each combination of measurement and gate errors:
     for i in range(num_vals):
@@ -151,10 +154,28 @@ def genetate_all_error_data(min_meas_prob, max_meas_prob, min_gate_prob, max_gat
             
             #Generate this data set:
             state_mean_counts, state_std_devs, counts_labels = generate_error_data(meas_prob_vals[i], gate_prob_vals[j], num_shots, num_tests, no_qubits)
-            print(state_mean_counts, state_std_devs, counts_labels)
+            all_meas_prob_vals = [meas_prob_vals[i]] * len(counts_labels)
+            all_gate_prob_vals = [gate_prob_vals[j]] * len(counts_labels)
+            #print(state_mean_counts, state_std_devs, counts_labels, all_meas_prob_vals, all_gate_prob_vals)
+
+            tot_means.extend(state_mean_counts)
+            tot_stdevs.extend(state_std_devs)
+            tot_labels.extend(counts_labels)
+            tot_meas_prob.extend(all_meas_prob_vals)
+            tot_gate_prob.extend(all_gate_prob_vals)
+
+    #Now we want to pop all this stuff into a data frame...
+    noise_data = pd.DataFrame()
+    noise_data['State']=pd.Series(tot_labels)
+    noise_data['Meas. Err. Prob']=pd.Series(tot_meas_prob)
+    noise_data['Gate Err. Prob']=pd.Series(tot_gate_prob)
+    noise_data['Count Mean']=pd.Series(tot_means)
+    noise_data['Count Std. Dev.']=pd.Series(tot_stdevs)
+
+    #print(noise_data)
+
+    return noise_data
             
-
-
 #######################################################################
 
 #Main: Let's run some functions!
