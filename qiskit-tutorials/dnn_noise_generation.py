@@ -28,6 +28,7 @@ from qiskit_aer.noise import (NoiseModel, QuantumError, ReadoutError,
 
 #######################################################################
 
+#Write a function to generate all possible qubit states based on our number of qubits:
 def generate_all_poss_states(no_qubits):
     #Initialize array of possible configurations.
     poss_configs = []
