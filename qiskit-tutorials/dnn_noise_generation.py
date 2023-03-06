@@ -16,6 +16,10 @@ import pandas as pd
 import copy
 import itertools
 
+#The thing we use to create an sql database!
+from sqlalchemy import create_engine, text
+import sqlalchemy
+
 from qiskit import IBMQ, transpile
 from qiskit import QuantumCircuit
 from qiskit_aer import AerSimulator
@@ -176,9 +180,28 @@ def genetate_all_error_data(min_meas_prob, max_meas_prob, min_gate_prob, max_gat
     #print(noise_data)
 
     return noise_data
-            
+
+#Write a function to create an sql database and send data to database:
+def noise_data_to_database(min_meas_prob, max_meas_prob, min_gate_prob, max_gate_prob, num_vals, num_shots, num_tests, no_qubits):
+    #Use our previous function to create our noise data:
+    noise_data = genetate_all_error_data(min_meas_prob, max_meas_prob, min_gate_prob, max_gate_prob, num_vals, num_shots, num_tests, no_qubits)
+
+    #Create in-memory sql database:
+    sql_engine = create_engine('sqlite://', echo=False)
+    #Make sure we're connected to the database...
+    connection = sql_engine.raw_connection()
+    #Send dataframe to sql:
+    noise_data.to_sql('quantum_noise_data', connection, if_exists='replace')
+
+    #Grab our raw results...
+    results = connection.execute("SELECT * FROM quantum_noise_data").fetchall()
+
+    #Or we can goback into pandas from our database...
+    results_df = pd.read_sql_query("SELECT * FROM quantum_noise_data", connection)
+
+    return results, results_df
 #######################################################################
 
 #Main: Let's run some functions!
 
-genetate_all_error_data(0, 0.2, 0, 0.2, 3, 100, 10, 3)
+noise_data_to_database(0, 0.2, 0, 0.2, 3, 100, 10, 3)
