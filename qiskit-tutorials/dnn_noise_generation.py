@@ -195,13 +195,17 @@ def noise_data_to_database(min_meas_prob, max_meas_prob, min_gate_prob, max_gate
 
     #Grab our raw results...
     results = connection.execute("SELECT * FROM quantum_noise_data").fetchall()
+    #print(results)
 
     #Or we can goback into pandas from our database...
     results_df = pd.read_sql_query("SELECT * FROM quantum_noise_data", connection)
+    print(results_df)
 
     return results, results_df
 #######################################################################
 
 #Main: Let's run some functions!
+
+#genetate_all_error_data(0, 0.2, 0, 0.2, 3, 100, 10, 3)
 
 noise_data_to_database(0, 0.2, 0, 0.2, 3, 100, 10, 3)
