@@ -202,6 +202,10 @@ def noise_data_to_database(min_meas_prob, max_meas_prob, min_gate_prob, max_gate
     print(results_df)
 
     return results, results_df
+
+#def plot_noise_data(min_meas_prob, max_meas_prob, min_gate_prob, max_gate_prob, num_vals, num_shots, num_tests, no_qubits):
+
+    #Create state frequency plot as p_meas and p_gate increase. Want to use t-SNE reduction to plot.
 #######################################################################
 
 #Main: Let's run some functions!
