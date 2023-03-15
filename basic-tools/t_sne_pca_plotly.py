@@ -30,14 +30,16 @@ def test_function():
 
 def test_tsne():
     df = px.data.iris()
+    print(df)
 
     features = df.loc[:, :'petal_width']
+    print(features)
 
     tsne = TSNE(n_components=2, random_state=0)
     projections = tsne.fit_transform(features)
 
     fig = px.scatter(projections, x=0, y=1, color=df.species, labels={'color': 'species'})
-    fig.show()
+    #fig.show()
 
 def test_tsne_3d():
     df = px.data.iris()
@@ -52,7 +54,8 @@ def test_tsne_3d():
         color=df.species, labels={'color': 'species'})
     fig.update_traces(marker_size=8)
     fig.show()
+    
 #######################################################################
 
-test_function()
-#test_tsne_3d()
+#test_function()
+test_tsne()

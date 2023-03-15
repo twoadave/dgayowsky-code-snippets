@@ -16,10 +16,15 @@ import pandas as pd
 import copy
 import itertools
 
+#The dimensionality reduction things!
+import plotly.express as px
+from sklearn.manifold import TSNE
+
 #The thing we use to create an sql database!
 from sqlalchemy import create_engine, text
 import sqlalchemy
 
+#The qiskit things!
 from qiskit import IBMQ, transpile
 from qiskit import QuantumCircuit
 from qiskit_aer import AerSimulator
@@ -203,9 +208,9 @@ def noise_data_to_database(min_meas_prob, max_meas_prob, min_gate_prob, max_gate
 
     return results, results_df
 
-#def plot_noise_data(min_meas_prob, max_meas_prob, min_gate_prob, max_gate_prob, num_vals, num_shots, num_tests, no_qubits):
-
-    #Create state frequency plot as p_meas and p_gate increase. Want to use t-SNE reduction to plot.
+#Okay now try and write our own t-sne function for dimensionality reduction:
+def tsne_quantum_noise():
+    
 #######################################################################
 
 #Main: Let's run some functions!
