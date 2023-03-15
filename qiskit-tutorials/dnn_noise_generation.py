@@ -146,7 +146,7 @@ def generate_error_data(meas_prob, gate_prob, num_shots, num_tests, no_qubits):
     return state_mean_counts, state_std_devs, counts_labels
 
 #Write a function to generate all of our error data across multiple probabilities:   
-def genetate_all_error_data(min_meas_prob, max_meas_prob, min_gate_prob, max_gate_prob, num_vals, num_shots, num_tests, no_qubits):
+def generate_all_error_data(min_meas_prob, max_meas_prob, min_gate_prob, max_gate_prob, num_vals, num_shots, num_tests, no_qubits):
 
     #Generate error probability values:
     meas_prob_vals = np.linspace(min_meas_prob, max_meas_prob, num_vals)
@@ -189,7 +189,7 @@ def genetate_all_error_data(min_meas_prob, max_meas_prob, min_gate_prob, max_gat
 #Write a function to create an sql database and send data to database:
 def noise_data_to_database(min_meas_prob, max_meas_prob, min_gate_prob, max_gate_prob, num_vals, num_shots, num_tests, no_qubits):
     #Use our previous function to create our noise data:
-    noise_data = genetate_all_error_data(min_meas_prob, max_meas_prob, min_gate_prob, max_gate_prob, num_vals, num_shots, num_tests, no_qubits)
+    noise_data = generate_all_error_data(min_meas_prob, max_meas_prob, min_gate_prob, max_gate_prob, num_vals, num_shots, num_tests, no_qubits)
 
     #Create in-memory sql database:
     sql_engine = create_engine('sqlite://', echo=False)
@@ -208,13 +208,55 @@ def noise_data_to_database(min_meas_prob, max_meas_prob, min_gate_prob, max_gate
 
     return results, results_df
 
+def plot_quantum_data(min_meas_prob, max_meas_prob, min_gate_prob, max_gate_prob, num_vals, num_shots, num_tests, no_qubits):
+    #First, grab our data from a dataframe:
+    noise_data = generate_all_error_data(min_meas_prob, max_meas_prob, min_gate_prob, max_gate_prob, num_vals, num_shots, num_tests, no_qubits)
+    #Grab our features:
+    features = ['Meas. Err. Prob', 'Gate Err. Prob', 'Count Mean', 'Count Std. Dev.']
+    fig = px.scatter_matrix(noise_data, dimensions=features, color='State')
+    fig.show()
+
 #Okay now try and write our own t-sne function for dimensionality reduction:
-def tsne_quantum_noise():
-    
+def tsne_quantum_noise(min_meas_prob, max_meas_prob, min_gate_prob, max_gate_prob, num_vals, num_shots, num_tests, no_qubits):
+    #First, grab our data from a dataframe:
+    noise_data = generate_all_error_data(min_meas_prob, max_meas_prob, min_gate_prob, max_gate_prob, num_vals, num_shots, num_tests, no_qubits)
+    #Grab our features:
+    features = noise_data.loc[:, 'Meas. Err. Prob':]
+    #print(features)
+
+    #Now do our tsne
+    #I have no idea what I'm doing tee hee
+    tsne = TSNE(n_components=2, random_state=0)
+    projections = tsne.fit_transform(features)
+
+    #Okay now plot it!
+    fig = px.scatter(projections, x=0, y=1, color=noise_data.State, labels={'color': 'State'})
+    fig.update_traces(marker_size=20)
+    fig.show()
+
+#Okay now do it again in 3d!
+def tsne_quantum_noise_3d(min_meas_prob, max_meas_prob, min_gate_prob, max_gate_prob, num_vals, num_shots, num_tests, no_qubits):
+    #First, grab our data from a dataframe:
+    noise_data = generate_all_error_data(min_meas_prob, max_meas_prob, min_gate_prob, max_gate_prob, num_vals, num_shots, num_tests, no_qubits)
+    #Grab our features:
+    features = noise_data.loc[:, 'Meas. Err. Prob':]
+    #print(features)
+
+    #Now do our tsne
+    #I have no idea what I'm doing tee hee
+    tsne = TSNE(n_components=3, random_state=0)
+    projections = tsne.fit_transform(features, )
+
+    #Okay now plot it!
+    fig = px.scatter_3d(projections, x=0, y=1, z=2, color=noise_data.State, labels={'color': 'State'})
+    fig.update_traces(marker_size=20)
+    fig.show()
+
 #######################################################################
 
 #Main: Let's run some functions!
 
 #genetate_all_error_data(0, 0.2, 0, 0.2, 3, 100, 10, 3)
 
-noise_data_to_database(0, 0.2, 0, 0.2, 3, 100, 10, 3)
+#plot_quantum_data(0, 0.2, 0, 0.2, 3, 100, 10, 3)
+tsne_quantum_noise_3d(0, 0.2, 0, 0.2, 3, 100, 10, 3)
