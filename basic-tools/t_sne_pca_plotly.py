@@ -5,6 +5,9 @@ Created on Wed Mar 15 2023
 @author: David
 
 Practice t-SNE and maybe PCA dimensionality reduction using Plotly.
+
+NOTE FOR FUTURE DAVID: UMAP STUFF IS IN dnn_noise_generation.py
+YOU'RE WELCOME!
 """
 
 #######################################################################
