@@ -6,6 +6,8 @@ Created on Wed Jan 2 2023
 
 Generating state counts with different types of noise for the purpose of
 running on a DNN.
+
+Also T-SNE and UMAP dimensionality reduction.
 """
 
 #######################################################################
@@ -19,6 +21,7 @@ import itertools
 #The dimensionality reduction things!
 import plotly.express as px
 from sklearn.manifold import TSNE
+from umap import UMAP
 
 #The thing we use to create an sql database!
 from sqlalchemy import create_engine, text
@@ -252,6 +255,32 @@ def tsne_quantum_noise_3d(min_meas_prob, max_meas_prob, min_gate_prob, max_gate_
     fig.update_traces(marker_size=20)
     fig.show()
 
+#Okay now use UMAP and see what we get!
+def umap_quantum_noise(min_meas_prob, max_meas_prob, min_gate_prob, max_gate_prob, num_vals, num_shots, num_tests, no_qubits):
+    #First, grab our data from a dataframe:
+    noise_data = generate_all_error_data(min_meas_prob, max_meas_prob, min_gate_prob, max_gate_prob, num_vals, num_shots, num_tests, no_qubits)
+    #Grab our features:
+    features = noise_data.loc[:, 'Meas. Err. Prob':]
+
+    umap_2d = UMAP(n_components=2, init='random', random_state=0)
+    umap_3d = UMAP(n_components=3, init='random', random_state=0)
+
+    proj_2d = umap_2d.fit_transform(features)
+    proj_3d = umap_3d.fit_transform(features)
+
+    fig_2d = px.scatter(
+        proj_2d, x=0, y=1,
+        color=noise_data.State, labels={'color': 'State'}
+    )
+    fig_3d = px.scatter_3d(
+        proj_3d, x=0, y=1, z=2,
+        color=noise_data.State, labels={'color': 'State'}
+    )
+    fig_2d.update_traces(marker_size=20)
+    fig_3d.update_traces(marker_size=20)
+
+    fig_2d.show()
+    fig_3d.show()
 #######################################################################
 
 #Main: Let's run some functions!
@@ -259,4 +288,6 @@ def tsne_quantum_noise_3d(min_meas_prob, max_meas_prob, min_gate_prob, max_gate_
 #genetate_all_error_data(0, 0.2, 0, 0.2, 3, 100, 10, 3)
 
 #plot_quantum_data(0, 0.2, 0, 0.2, 3, 100, 10, 3)
-tsne_quantum_noise_3d(0, 0.2, 0, 0.2, 3, 100, 10, 3)
+#tsne_quantum_noise_3d(0, 0.2, 0, 0.2, 3, 100, 10, 3)
+
+umap_quantum_noise(0, 0.2, 0, 0.2, 3, 100, 10, 3)
