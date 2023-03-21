@@ -93,3 +93,81 @@ plt.imshow(ez_data.transpose(), interpolation='spline36', cmap='RdBu', alpha=0.9
 plt.axis('off')
 plt.show()
 
+#######################################################################
+
+#Tutorial 2: Ninety-Degree Bend
+#We'll start a new simulation where we look at the fields propagating through a waveguide 
+# bend, and we'll do a couple of other things differently as well. 
+
+#Then let's set up the bent waveguide in a slightly larger cell:
+cell = mp.Vector3(16,16,0)
+
+geometry = [mp.Block(mp.Vector3(12,1,mp.inf),
+                     center=mp.Vector3(-2.5,-3.5),
+                     material=mp.Medium(epsilon=12)),
+            mp.Block(mp.Vector3(1,12,mp.inf),
+                     center=mp.Vector3(3.5,2),
+                     material=mp.Medium(epsilon=12))]
+
+pml_layers = [mp.PML(1.0)]
+
+resolution = 10
+
+#There are a couple of items to note. First, a point source does not couple very efficiently 
+# to the waveguide mode, so we'll expand this into a line source, centered at (-7,-3.5), with 
+# the same width as the waveguide by adding a size property to the source. This is shown in 
+# green in the figure above. An eigenmode source can also be used which is described in 
+# Tutorial/Optical Forces. Second, instead of turning the source on suddenly at t=0 which excites 
+# many other frequencies because of the discontinuity, we will ramp it on slowly. Meep uses a 
+# hyperbolic tangent (tanh) turn-on function over a time proportional to the width of 20 time 
+# units which is a little over three periods. Finally, just for variety, we'll specify the vacuum 
+# wavelength instead of the frequency; again, we'll use a wavelength such that the waveguide is 
+# half a wavelength wide.
+
+sources = [mp.Source(mp.ContinuousSource(wavelength=2*(11**0.5), width=20),
+                     component=mp.Ez,
+                     center=mp.Vector3(-7,-3.5),
+                     size=mp.Vector3(0,1))]
+
+#Finally, we'll run the simulation. The first set of arguments to the run routine specify fields 
+# to output or other kinds of analyses at each time step.
+
+sim = mp.Simulation(cell_size=cell,
+                    boundary_layers=pml_layers,
+                    geometry=geometry,
+                    sources=sources,
+                    resolution=resolution)
+
+#sim.run(mp.at_beginning(mp.output_epsilon),
+#        mp.to_appended("ez", mp.at_every(0.6, mp.output_efield_z)),
+#        until=200)
+
+#Instead of running output_efield_z only at the end of the simulation, however, we run it at 
+# every 0.6 time units (about 10 times per period) via mp.at_every(0.6, mp.output_efield_z). 
+# By itself, this would output a separate file for every different output time, but instead we'll 
+# use another feature to output to a single 3d HDF5 file, where the third dimension is time. "ez" 
+# determines the name of the output file, which will be called ez.h5 if you are running interactively 
+# or will be prefixed with the name of the file name for a Python file (e.g. tutorial-ez.h5 for 
+# tutorial.py).
+
+#Let's create an animation of the fields as a function of time. First, we have to create images 
+# for all of the time slices:
+
+#Instead of doing an animation, another interesting possibility is to make an image from a x×t slice. 
+# To get the y=−3.5 slice, which gives us an image of the fields in the first waveguide branch as a 
+# function of time, we can use get_array in a step function to collect a slice for each time step:
+
+vals = []
+
+def get_slice(sim):
+    vals.append(sim.get_array(center=mp.Vector3(-2.5,-3.5), size=mp.Vector3(16,0), component=mp.Ez))
+
+sim.run(mp.at_beginning(mp.output_epsilon),
+        mp.at_every(0.6, get_slice),
+        until=200)
+
+plt.figure()
+plt.imshow(vals, interpolation='spline36', cmap='RdBu')
+plt.axis('off')
+plt.show()
+
