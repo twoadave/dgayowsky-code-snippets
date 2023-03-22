@@ -11,6 +11,8 @@ PyMeep tutorials.
 import meep as mp
 import matplotlib.pyplot as plt
 import numpy as np
+from IPython.display import Video 
+import os
 
 #######################################################################
 
@@ -69,7 +71,15 @@ sim = mp.Simulation(cell_size=cell,
 
 #We are ready to run the simulation. We time step the fields until a time of 200:
 
+plt.figure(dpi=100)
+sim.plot2D()
+plt.show()
+
 sim.run(until=200)
+
+plt.figure(dpi=100)
+sim.plot2D(fields=mp.Ez)
+plt.show()
 
 #We can analyze and visualize the fields with the NumPy and Matplotlib libraries.
 #We will first create an image of the dielectric function ε. This involves obtaining 
@@ -92,6 +102,33 @@ plt.imshow(eps_data.transpose(), interpolation='spline36', cmap='binary')
 plt.imshow(ez_data.transpose(), interpolation='spline36', cmap='RdBu', alpha=0.9)
 plt.axis('off')
 plt.show()
+
+#Often, we want to track the evolution of the fields as a function of time. This helps us 
+# ensure the fields are propogating as we would expect. We can easily accomplish this 
+# using a run function. Run functions are passed to the sim.run() method and can be called 
+# every time step. The Animate2D() run function can be used to generate an animation object 
+# by grabbing frames from an arbitrary number of time steps. We need to pass the sim object 
+# we created, specify which fields component we are interested in tracking, specify how often 
+# we want to record the fields, and whether to plot everything in real time. For this 
+# simulation, let's look at the Ez fields and take a snapshot every 1 time units.
+
+sim.reset_meep()
+f = plt.figure(dpi=100)
+Animate = mp.Animate2D(fields=mp.Ez, f=f, realtime=False, normalize=True)
+plt.close()
+
+sim.run(mp.at_every(1, Animate), until=100)
+plt.close()
+
+#Now that we've run the simulation, we can postprocess the animation and export it to an mp4 video 
+# using the to_mp4() method. We'll specify a filename and 10 frames-per-second (fps).
+
+file_path = os.path.realpath(__file__)
+filename = file_path + "straight_waveguide.mp4"
+Animate.to_mp4(10, filename)
+
+#Finally, we can use some iPython tools to visualize the animation natively.
+Video(filename)
 
 #######################################################################
 
@@ -141,6 +178,10 @@ sim = mp.Simulation(cell_size=cell,
 #sim.run(mp.at_beginning(mp.output_epsilon),
 #        mp.to_appended("ez", mp.at_every(0.6, mp.output_efield_z)),
 #        until=200)
+
+plt.figure(dpi=100)
+sim.plot2D()
+plt.show()
 
 #Instead of running output_efield_z only at the end of the simulation, however, we run it at 
 # every 0.6 time units (about 10 times per period) via mp.at_every(0.6, mp.output_efield_z). 
