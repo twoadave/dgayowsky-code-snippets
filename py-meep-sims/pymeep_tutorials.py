@@ -112,23 +112,23 @@ plt.show()
 # we want to record the fields, and whether to plot everything in real time. For this 
 # simulation, let's look at the Ez fields and take a snapshot every 1 time units.
 
-sim.reset_meep()
-f = plt.figure(dpi=100)
-Animate = mp.Animate2D(fields=mp.Ez, f=f, realtime=False, normalize=True)
-plt.close()
+#sim.reset_meep()
+#f = plt.figure(dpi=100)
+#Animate = mp.Animate2D(fields=mp.Ez, f=f, realtime=False, normalize=True)
+#plt.close()
 
-sim.run(mp.at_every(1, Animate), until=100)
-plt.close()
+#sim.run(mp.at_every(1, Animate), until=100)
+#plt.close()
 
 #Now that we've run the simulation, we can postprocess the animation and export it to an mp4 video 
 # using the to_mp4() method. We'll specify a filename and 10 frames-per-second (fps).
 
-file_path = os.path.realpath(__file__)
-filename = file_path + "straight_waveguide.mp4"
-Animate.to_mp4(10, filename)
+#file_path = os.path.realpath(__file__)
+#filename = file_path + "straight_waveguide.mp4"
+#Animate.to_mp4(10, filename)
 
 #Finally, we can use some iPython tools to visualize the animation natively.
-Video(filename)
+#Video(filename)
 
 #######################################################################
 
@@ -198,17 +198,41 @@ plt.show()
 # To get the y=−3.5 slice, which gives us an image of the fields in the first waveguide branch as a 
 # function of time, we can use get_array in a step function to collect a slice for each time step:
 
-vals = []
+#vals = []
 
-def get_slice(sim):
-    vals.append(sim.get_array(center=mp.Vector3(-2.5,-3.5), size=mp.Vector3(16,0), component=mp.Ez))
+#def get_slice(sim):
+#    vals.append(sim.get_array(center=mp.Vector3(-2.5,-3.5), size=mp.Vector3(16,0), component=mp.Ez))
 
-sim.run(mp.at_beginning(mp.output_epsilon),
-        mp.at_every(0.6, get_slice),
-        until=200)
+#sim.run(mp.at_beginning(mp.output_epsilon),
+#        mp.at_every(0.6, get_slice),
+#        until=200)
 
-plt.figure()
-plt.imshow(vals, interpolation='spline36', cmap='RdBu')
-plt.axis('off')
+#plt.figure()
+#plt.imshow(vals, interpolation='spline36', cmap='RdBu')
+#plt.axis('off')
+#plt.show()
+
+sim.run(until=200)
+
+plt.figure(dpi=100)
+sim.plot2D(fields=mp.Ez)
 plt.show()
+
+sim.reset_meep()
+f = plt.figure(dpi=100)
+Animate = mp.Animate2D(fields=mp.Ez, f=f, realtime=False, normalize=True)
+plt.close()
+
+sim.run(mp.at_every(1, Animate), until=100)
+plt.close()
+
+#Now that we've run the simulation, we can postprocess the animation and export it to an mp4 video 
+# using the to_mp4() method. We'll specify a filename and 10 frames-per-second (fps).
+
+file_path = os.path.realpath(__file__)
+filename = file_path + "bent_waveguide.mp4"
+Animate.to_mp4(10, filename)
+
+#Finally, we can use some iPython tools to visualize the animation natively.
+Video(filename)
 
