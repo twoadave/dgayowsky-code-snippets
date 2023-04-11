@@ -106,3 +106,65 @@ straight_tran_flux = mp.get_fluxes(tran)
 # We reset the structure and fields using reset_meep() and redefine the geometry, 
 # Simulation, and flux objects. At the end of the simulation, we save the 
 # reflected and transmitted fluxes.
+
+sim.reset_meep()
+
+geometry = [mp.Block(mp.Vector3(sx-pad,w,mp.inf), center=mp.Vector3(-0.5*pad,wvg_ycen), material=mp.Medium(epsilon=12)),
+            mp.Block(mp.Vector3(w,sy-pad,mp.inf), center=mp.Vector3(wvg_xcen,0.5*pad), material=mp.Medium(epsilon=12))]
+
+sim = mp.Simulation(cell_size=cell,
+                    boundary_layers=pml_layers,
+                    geometry=geometry,
+                    sources=sources,
+                    resolution=resolution)
+
+plt.figure(dpi=100)
+sim.plot2D()
+plt.show()
+
+# reflected flux
+refl = sim.add_flux(fcen, df, nfreq, refl_fr)
+
+tran_fr = mp.FluxRegion(center=mp.Vector3(wvg_xcen,0.5*sy-dpml-0.5,0), size=mp.Vector3(2*w,0,0))
+tran = sim.add_flux(fcen, df, nfreq, tran_fr)
+
+# for normal run, load negated fields to subtract incident from refl. fields
+sim.load_minus_flux_data(refl, straight_refl_data)
+
+pt = mp.Vector3(wvg_xcen,0.5*sy-dpml-0.5)
+
+sim.run(until_after_sources=mp.stop_when_fields_decayed(50, mp.Ez, pt, 1e-3))
+
+plt.figure(dpi=100)
+sim.plot2D(fields=mp.Ez)
+plt.show()
+
+bend_refl_flux = mp.get_fluxes(refl)
+bend_tran_flux = mp.get_fluxes(tran)
+
+flux_freqs = mp.get_flux_freqs(refl)
+
+#With the flux data, we are ready to compute and plot the reflectance and 
+# transmittance. The reflectance is the reflected flux divided by the incident 
+# flux. We also have to multiply by -1 because all fluxes in Meep are computed 
+# in the positive-coordinate direction by default, and we want the flux in the −x 
+# direction. The transmittance is the transmitted flux divided by the incident 
+# flux. Finally, the scattered loss is simply 1−transmittance−reflectance.
+
+wl = []
+Rs = []
+Ts = []
+for i in range(nfreq):
+    wl = np.append(wl, 1/flux_freqs[i])
+    Rs = np.append(Rs,-bend_refl_flux[i]/straight_tran_flux[i])
+    Ts = np.append(Ts,bend_tran_flux[i]/straight_tran_flux[i])
+
+if mp.am_master():
+    plt.figure()
+    plt.plot(wl,Rs,'bo-',label='reflectance')
+    plt.plot(wl,Ts,'ro-',label='transmittance')
+    plt.plot(wl,1-Rs-Ts,'go-',label='loss')
+    plt.axis([5.0, 10.0, 0, 1])
+    plt.xlabel("wavelength (μm)")
+    plt.legend(loc="upper right")
+    plt.show()
