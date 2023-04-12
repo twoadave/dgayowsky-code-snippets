@@ -49,7 +49,7 @@ geometry = [mp.Block(size=mp.Vector3(mp.inf,w,mp.inf),
 #The source is a GaussianSource instead of a ContinuousSource, parameterized by 
 # a center frequency and a frequency width (the width of the Gaussian spectrum).
 
-fcen = 0.15  # pulse center frequency
+fcen = 0.09  # pulse center frequency
 df = 0.1     # pulse width (in frequency)
 sources = [mp.Source(mp.GaussianSource(fcen,fwidth=df),
                      component=mp.Ez,
@@ -101,6 +101,8 @@ plt.show()
 
 # save incident power for transmission plane
 straight_tran_flux = mp.get_fluxes(tran)
+
+print(straight_tran_flux)
 
 #We need to run the second simulation which involves the waveguide bend. 
 # We reset the structure and fields using reset_meep() and redefine the geometry, 
