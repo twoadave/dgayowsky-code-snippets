@@ -26,7 +26,7 @@ geometry = [mp.Block(mp.Vector3(mp.inf,mp.inf, 0.5),
                      center=mp.Vector3(0,0,0),
                      material=mp.Medium(epsilon=1))]
 
-nfreq = 25
+nfreq = 300
 fcen = 1
 df = 0.75
 
@@ -49,13 +49,32 @@ refl = sim.add_flux(fcen, df, nfreq, refl_fr)
 tran_fr = mp.FluxRegion(center=mp.Vector3(0,0,1), size=mp.Vector3(2,2,0))
 tran = sim.add_flux(fcen, df, nfreq, tran_fr)
 
-sim.run(until=500)
+sim.run(until=50)
 
 # for normalization run, save flux fields data for reflection plane
 straight_refl_data = sim.get_flux_data(refl)
 
 # save incident power for transmission plane
 straight_tran_flux = mp.get_fluxes(tran)
+
+flux_freqs = mp.get_flux_freqs(refl)
+
+wl = []
+Ts = []
+for i in range(nfreq):
+    wl = np.append(wl, flux_freqs[i])
+    Ts = np.append(Ts, straight_tran_flux[i])
+
+#print(Ts)
+#print(wl)
+
+if mp.am_master():
+    plt.figure()
+    plt.plot(wl,Ts,'ro-',label='transmittance')
+    #plt.axis([0.7, 1.6, 0, 1])
+    plt.xlabel("wavelength (μm)")
+    plt.legend(loc="upper right")
+    plt.show()
 
 #######################################################################
 
