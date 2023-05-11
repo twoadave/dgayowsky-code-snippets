@@ -15,6 +15,7 @@ from IPython.display import Video
 import os
 import scipy as sp
 from scipy.constants import c
+import copy
 
 #######################################################################
 
@@ -31,7 +32,7 @@ from scipy.constants import c
 #######################################################################
 
 #1. Create simulation outline.
-def init_sim():
+def init_sim(run_time):
 
     resolution = 10 # pixels/um
 
@@ -60,13 +61,15 @@ def init_sim():
     #sim.plot2D()
     #plt.show()
 
-    sim.run(until=100)
+    sim.run(until=run_time)
+
+    ez_data = sim.get_array(center=mp.Vector3(), size=cell, component=mp.Ez)
 
     #plt.figure(dpi=100)
     #sim.plot2D(fields=mp.Ez)
     #plt.show()
 
-    return sim, cell, pml_layers, sources, resolution
+    return sim, cell, pml_layers, sources, resolution, ez_data
 
 #######################################################################
 
@@ -75,7 +78,7 @@ def init_sim():
 
 def with_target(run_time):
 
-    sim, cell, pml_layers, sources, resolution = init_sim()
+    sim, cell, pml_layers, sources, resolution, no_waveguide_data = init_sim(run_time)
 
     sim.reset_meep()
 
@@ -100,13 +103,92 @@ def with_target(run_time):
     #sim.plot2D(fields=mp.Ez)
     #plt.show()
 
-    #Now grab our data at time = 200...
+    #Now grab our data at time = 100...
     #We can add in other data points later, but let's try and make a waveguide which echoes this.
     ez_data = sim.get_array(center=mp.Vector3(), size=cell, component=mp.Ez)
 
-    return ez_data
+    return ez_data, no_waveguide_data
+
+#######################################################################
+
+#3. Remove the target shaped waveguide. 
+# 4. Re-run simulation, record data, and compute error. (Error = difference between target.)
+
+def compute_error(target_data, test_data):
+
+    total_diff = target_data - test_data
+    avg_diff = np.average(total_diff)
+
+    print(np.abs(avg_diff))
+    return np.abs(avg_diff)
+
+#######################################################################
+
+#5. Add a small shape, i.e. a small sphere.
+# 6. Re-run simulation, record data, and compute error.
+
+def monte_carlo_waveguide(run_time, num_iterations):
+    
+    target_data, no_waveguide_data = with_target(run_time)
+    
+    sim, cell, pml_layers, sources, resolution, no_waveguide_data = init_sim(run_time)
+
+    sim.reset_meep()
+    
+    #plt.figure(dpi=100)
+    #sim.plot2D()
+    #plt.show()
+
+    geometry_accept = []
+
+    init_error = compute_error(target_data, no_waveguide_data)
+    abs_error = []
+    abs_error.append(init_error)
+
+    for i in range(num_iterations):
+
+        sim.reset_meep()
+
+        sx = np.random.uniform(-1*(0.5*32), (0.5*32))
+        sy = np.random.uniform(-1*(0.5*32), (0.5*32))
+        new_obj = mp.Cylinder(center=mp.Vector3(sx,sy,0), height=mp.inf, radius=1,
+                axis=mp.Vector3(0,0,1), material=mp.Medium(epsilon=12))
+        
+        test_geometry = copy.deepcopy(geometry_accept)
+        test_geometry.append(new_obj)
+
+        sim = mp.Simulation(cell_size=cell,
+                        boundary_layers=pml_layers,
+                        geometry=test_geometry,
+                        sources=sources,
+                        resolution=resolution)
+        
+        sim.run(until=run_time)
+        test_data = sim.get_array(center=mp.Vector3(), size=cell, component=mp.Ez)
+        test_error = compute_error(target_data, test_data)
+
+        if (test_error < abs_error[-1]):
+            geometry_accept = test_geometry
+            abs_error.append(test_error)
+        else:
+            pass
+
+    sim.reset_meep()
+
+    sim = mp.Simulation(cell_size=cell,
+                        boundary_layers=pml_layers,
+                        geometry=geometry_accept,
+                        sources=sources,
+                        resolution=resolution)
+
+    sim.run(until=run_time)
+
+    plt.figure(dpi=100)
+    sim.plot2D(fields=mp.Ez)
+    plt.show()
 
 #######################################################################
 
 #Main: Let's run some functions!
-target_data = with_target(100)
+
+monte_carlo_waveguide(100, 200)
