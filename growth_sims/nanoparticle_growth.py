@@ -184,8 +184,8 @@ def delta_E_nano(nano_move, liquid_arr, nano_arr, e_l, e_nl, e_n, ch_indices, wa
                 
         #Add Needed bond energy contributions
         #Add needed bond contributions - nearest neighbours
-        delta_e += bond_ch((x_i,y_i), ch_indices)
-        delta_e += bond_ch((x_i_wake,y_i_wake),(-ch_indices[0],-ch_indices[1]))
+        delta_e += bond_ch((x_i,y_i), ch_indices, liquid_arr, nano_arr, e_l, e_nl, e_n)
+        delta_e += bond_ch((x_i_wake,y_i_wake),(-ch_indices[0],-ch_indices[1]), liquid_arr, nano_arr, e_l, e_nl, e_n)
 
     delta_e *= (1/(1+1/math.sqrt(2)))
     return delta_e
@@ -216,7 +216,7 @@ def liquid_step(x_dim, y_dim, liquid_arr, nano_arr, kT, e_l, e_nl, mu):
     return liquid_arr
 
 #Define function to perform nanoparticle step.
-def nano_step(x_dim, y_dim, liquid_arr, nano_arr, nano_list_indices, kT, e_l, e_nl, e_n, mu, nano_size):
+def nano_step(x_dim, y_dim, liquid_arr, nano_arr, nano_list_indices, kT, e_l, e_nl, e_n, nano_size):
 
     #Randomly pick which nanoparticle we'd like to move.
     nano_move = np.random.randint(0, len(nano_list_indices))
@@ -245,26 +245,43 @@ def nano_step(x_dim, y_dim, liquid_arr, nano_arr, nano_list_indices, kT, e_l, e_
         pass
     #Now if we have all water and we're not on a boundary, we can try to move.
     else:
-        #Calculate change in energy as consequence of move:
-
-        #Compare to probability:
-
         if move_dir == 0:
-            #new_indices = (x_i, y_i+1)
             ch_indices = (0, 1)
             offset = (0, nano_size)
         elif move_dir == 1:
-            #new_indices = (x_i, y_i-1)
             ch_indices = (0, -1)
             offset = (0,-1)
         elif move_dir == 2:
-            #new_indices = (x_i+1, y_i)
             ch_indices = (1, 0)
             offset = (nano_size,0)
         else:
-            #new_indices = (x_i-1, y_i)
             ch_indices = (-1, 0)
             wake_offset = (nano_size-1,0)
+
+        #Calculate change in energy as consequence of move:
+        DeltaE = delta_E_nano(nano_move, liquid_arr, nano_arr, e_l, e_nl, e_n, ch_indices, wake_offset, nano_size, offset)
+        
+        #Compare to probability:
+        P = np.exp(-1*DeltaE/kT)
+
+        #If our prob is less than randomly generated uniform variable, do not flip.
+        if P < np.random.uniform():
+            pass
+        #Otherwise, accept flip.
+        else:
+            #Remove nanoparticle and fill spot with liquid:
+            nano_arr[y_i:y_i+nano_size, x_i:x_i+nano_size] = 0
+            liquid_arr[y_i:y_i+nano_size, x_i:x_i+nano_size] = 1
+            #Change our index in our list of indices...
+            nano_list_indices[nano_move][0] = x_i + ch_indices[0]
+            nano_list_indices[nano_move][1] = y_i + ch_indices[1]
+            #Add to nanoparticle placement:
+            nano_arr[y_i + ch_indices[1]:y_i + ch_indices[1]+nano_size, x_i + ch_indices[0]:x_i + ch_indices[0]+nano_size] = 1
+            #Remove from liquid array:
+            liquid_arr[y_i + ch_indices[1]:y_i + ch_indices[1]+nano_size, x_i + ch_indices[0]:x_i + ch_indices[0]+nano_size] = 0
+    
+    return liquid_arr, nano_arr, nano_list_indices
+            
 
 
 #######################################################################
