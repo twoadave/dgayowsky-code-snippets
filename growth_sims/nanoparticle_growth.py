@@ -46,6 +46,29 @@ of random nanoparticles M each cycle (i.e. 30 nanoparticle cycles per solvent cy
 
 #######################################################################
 
+'''Args:
+kT: temperature * Kb
+mu: chemical potential
+e_nn: nano-nano attraction
+e_nl: nano-solvent attraction
+e_ll: solvent-solvent attraction -- All other attractions and mu are given in relation to this, leave as 1'''
+
+#######################################################################
+
+'''Default arguments to (mostly) match paper: 
+y_dim = 1000
+x_dim = 1000
+frac = 0.3
+mu = -2.5
+kT = 0.2
+e_n = 2
+e_nl = 1.5
+e_l = 1
+nano_steps = 30 (Per Solvent Step)
+nano_size = 3'''
+
+#######################################################################
+
 #Define function to initialize water/vapour and nanoparticle arrays.
 def init_arrays(x_dim, y_dim, nano_size, num_nano_attempts):
 
@@ -94,31 +117,56 @@ def init_arrays(x_dim, y_dim, nano_size, num_nano_attempts):
 
     return liquid_arr, nano_arr, nano_list_indices
 
+#Define function to calculate energy change when performing liquid step.
+def delta_E_liquid(flip_index, liquid_arr, nano_arr, e_l, e_nl, mu):
+    
+    norm = 1/(1+1/math.sqrt(2))
+    x_i = flip_index[0]
+    y_i = flip_index[1]
+
+    delta_e = -(1-2*liquid_arr[x_i,y_i])*((norm)*(e_l*(liquid_arr[(x_i-1),y_i]+
+                                                             liquid_arr[(x_i+1),y_i]+
+                                                             liquid_arr[x_i,(y_i-1)]+
+                                                             liquid_arr[x_i,(y_i+1)]+
+                                                             (1/math.sqrt(2))*
+                                                             (liquid_arr[(x_i-1),(y_i-1)]+
+                                                             liquid_arr[(x_i+1),(y_i-1)]+
+                                                             liquid_arr[(x_i-1),(y_i+1)]+
+                                                             liquid_arr[(x_i+1),(y_i+1)]))
+                                                 +e_nl*(nano_arr[(x_i-1),y_i]+
+                                                             nano_arr[(x_i+1),y_i]+
+                                                             nano_arr[x_i,(y_i-1)]+
+                                                             nano_arr[x_i,(y_i+1)]+
+                                                             (1/math.sqrt(2))*
+                                                             (nano_arr[(x_i-1),(y_i-1)]+
+                                                             nano_arr[(x_i+1),(y_i-1)]+
+                                                             nano_arr[(x_i-1),(y_i+1)]+
+                                                             nano_arr[(x_i+1),(y_i+1)])))
+                                                 +mu)
+    return delta_e
+
 #Define function to perform liquid step.
-def liquid_step(x_dim, y_dim, liquid_arr, nano_arr, nano_list_indices, num_liquid_flips, kT):
+def liquid_step(x_dim, y_dim, liquid_arr, nano_arr, num_liquid_flips, kT, e_l, e_nl, mu):
 
-    #For the number of flips we want to perform:
-    for i in range(num_liquid_flips):
+    #Generate random flip index:
+    flip_index = (np.random.randint(0, x_dim), np.random.randint(0, y_dim))
 
-        #Generate random flip index:
-        flip_index = (np.random.randint(0, x_dim), np.random.randint(0, y_dim))
+    #Check if we can perform that flip:
+    if liquid_arr[flip_index[0], flip_index[1]] == 0:
+        pass
+    else:
+        #Calculate energy change:
+        DeltaE = delta_E_liquid(flip_index, liquid_arr, nano_arr, e_l, e_nl, mu)
 
-        #Check if we can perform that flip:
-        if liquid_arr[flip_index[0], flip_index[1]] == 0:
+        #Compare with metropolis probability:
+        P = np.exp(-1*DeltaE/kT)
+
+        #If our prob is less than randomly generated uniform variable, do not flip.
+        if P < np.random.uniform():
             pass
+        #Otherwise, accept flip.
         else:
-            #Calculate energy change:
-            DeltaE = 0 #Insert energy calculating function here...
-
-            #Compare with metropolis probability:
-            P = np.exp(-1*DeltaE/kT)
-
-            #If our prob is less than randomly generated uniform variable, do not flip.
-            if P < np.random.uniform():
-                pass
-            #Otherwise, accept flip.
-            else:
-                liquid_arr[flip_index[0], flip_index[1]] = 0
+            liquid_arr[flip_index[0], flip_index[1]] = 0
 
 
 
