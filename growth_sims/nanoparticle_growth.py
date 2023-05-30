@@ -93,7 +93,35 @@ def init_arrays(x_dim, y_dim, nano_size, num_nano_attempts):
     plt.show()
 
     return liquid_arr, nano_arr, nano_list_indices
-            
+
+#Define function to perform liquid step.
+def liquid_step(x_dim, y_dim, liquid_arr, nano_arr, nano_list_indices, num_liquid_flips, kT):
+
+    #For the number of flips we want to perform:
+    for i in range(num_liquid_flips):
+
+        #Generate random flip index:
+        flip_index = (np.random.randint(0, x_dim), np.random.randint(0, y_dim))
+
+        #Check if we can perform that flip:
+        if liquid_arr[flip_index[0], flip_index[1]] == 0:
+            pass
+        else:
+            #Calculate energy change:
+            DeltaE = 0 #Insert energy calculating function here...
+
+            #Compare with metropolis probability:
+            P = np.exp(-1*DeltaE/kT)
+
+            #If our prob is less than randomly generated uniform variable, do not flip.
+            if P < np.random.uniform():
+                pass
+            #Otherwise, accept flip.
+            else:
+                liquid_arr[flip_index[0], flip_index[1]] = 0
+
+
+
 #######################################################################
 
 #liquid_arr, nano_arr, nano_list_indices = init_arrays(30, 30, 3, 5)
