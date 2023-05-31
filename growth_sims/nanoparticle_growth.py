@@ -86,7 +86,7 @@ def init_arrays(x_dim, y_dim, nano_size, num_nano_attempts):
     for i in range(num_nano_attempts):
 
         #Generate random index:
-        indices = (np.random.randint(0, x_dim-(nano_size-1)), np.random.randint(0, y_dim-(nano_size-1)))
+        indices = (np.random.randint(0, x_dim-(nano_size)), np.random.randint(0, y_dim-(nano_size)))
 
         #Check and see if this index is already occupied by a nanoparticle:
         nano_placement = nano_arr[indices[1]:indices[1]+nano_size, indices[0]:indices[0]+nano_size]
@@ -154,14 +154,17 @@ def bond_ch(index, ch_indices, liquid_arr, nano_arr, e_l, e_nl, e_n):
     y_i = index[1]
     x_i_neigh = (index[0]+ch_indices[0])
     y_i_neigh = (index[1]+ch_indices[1])
-        
-    #Calculate bond energy change
-    de = (1-2*liquid_arr[x_i,y_i])*\
-                (e_l*(liquid_arr[x_i_neigh,y_i_neigh])+\
-                 e_nl*(nano_arr[x_i_neigh,y_i_neigh]))+\
-             (1-2*nano_arr[x_i,y_i])*\
-                (e_n*(nano_arr[x_i_neigh,y_i_neigh])+\
-                 e_nl*(liquid_arr[x_i_neigh,y_i_neigh]))
+    
+    if (x_i_neigh >= len(liquid_arr)) or (y_i_neigh >= len(liquid_arr)) or (y_i >= len(liquid_arr)) or (x_i >= len(liquid_arr)):
+        de = 0
+    else:
+        #Calculate bond energy change
+        de = (1-2*liquid_arr[x_i,y_i])*\
+                    (e_l*(liquid_arr[x_i_neigh,y_i_neigh])+\
+                    e_nl*(nano_arr[x_i_neigh,y_i_neigh]))+\
+                (1-2*nano_arr[x_i,y_i])*\
+                    (e_n*(nano_arr[x_i_neigh,y_i_neigh])+\
+                    e_nl*(liquid_arr[x_i_neigh,y_i_neigh]))
     return -de
 
 #Define function to calculate energy change when performing nanoparticle step.
@@ -194,7 +197,7 @@ def delta_E_nano(nano_move, liquid_arr, nano_arr, e_l, e_nl, e_n, ch_indices, wa
 def liquid_step(x_dim, y_dim, liquid_arr, nano_arr, kT, e_l, e_nl, mu):
 
     #Generate random flip index:
-    flip_index = (np.random.randint(0, x_dim), np.random.randint(0, y_dim))
+    flip_index = (np.random.randint(0, x_dim-2), np.random.randint(0, y_dim-2))
 
     #Check if we can perform that flip:
     if liquid_arr[flip_index[0], flip_index[1]] == 0:
@@ -202,12 +205,14 @@ def liquid_step(x_dim, y_dim, liquid_arr, nano_arr, kT, e_l, e_nl, mu):
     else:
         #Calculate energy change:
         DeltaE = delta_E_liquid(flip_index, liquid_arr, nano_arr, e_l, e_nl, mu)
-
+        #print(DeltaE)
         #Compare with metropolis probability:
-        P = np.exp(-1*DeltaE/kT)
+        P = min(1, np.exp(-DeltaE/kT))
+        rand_var = np.random.uniform(0,1)
+        #print(P)
 
         #If our prob is less than randomly generated uniform variable, do not flip.
-        if P < np.random.uniform():
+        if P < rand_var:
             pass
         #Otherwise, accept flip.
         else:
@@ -223,71 +228,119 @@ def nano_step(x_dim, y_dim, liquid_arr, nano_arr, nano_list_indices, kT, e_l, e_
     x_i = nano_list_indices[nano_move][0]
     y_i = nano_list_indices[nano_move][1]
 
+    print(x_i, y_i)
+
     #Now randomly pick a direction we'd like to try and move it in.
     #Note: 0, 1, 2, 3 = N, S, E, W, respectively.
     move_dir = np.random.randint(0, 4)
 
-    if move_dir == 0:
-        liquid_move = liquid_arr[y_i-1, x_i:x_i+nano_size]
-    elif move_dir == 1:
-        liquid_move = liquid_arr[y_i+nano_size, x_i:x_i+nano_size]
-    elif move_dir == 2:
-        liquid_move = liquid_arr[y_i:y_i+nano_size, x_i+nano_size]
-    else:
-        liquid_move = liquid_arr[y_i:y_i+nano_size, x_i-1]
-
     #Now see whether we can actually move...
     #If we hit the boundary, pass.
-    if (move_dir == 0 and y_i - 1 == -1) or (move_dir == 1 and y_i + 1 == y_dim-(nano_size-1)) or (move_dir == 2 and x_i + 1 == x_dim-(nano_size-1)) or (move_dir == 3 and x_i - 1 == -1):
+    if ((move_dir == 0) and ((y_i - 1) <= -1)) or ((move_dir == 1) and ((y_i + nano_size + 1) >= y_dim)) or ((move_dir == 2) and ((x_i + nano_size + 1) >= x_dim)) or ((move_dir == 3) and ((x_i - 1) <= -1)):
         pass
-    #If the bit we're moving into do not have water in them, pass.
-    elif any(0 in x for x in liquid_move):
-        pass
-    #Now if we have all water and we're not on a boundary, we can try to move.
-    else:
+    else: 
         if move_dir == 0:
-            ch_indices = (0, 1)
-            offset = (0, nano_size)
+            liquid_move = liquid_arr[y_i-1, x_i:x_i+nano_size]
+            liquid_move = liquid_move.astype(int)
         elif move_dir == 1:
-            ch_indices = (0, -1)
-            offset = (0,-1)
+            liquid_move = liquid_arr[y_i+nano_size, x_i:x_i+nano_size]
+            liquid_move = liquid_move.astype(int)
         elif move_dir == 2:
-            ch_indices = (1, 0)
-            offset = (nano_size,0)
+            liquid_move = liquid_arr[y_i:y_i+nano_size, x_i+nano_size]
+            liquid_move = liquid_move.astype(int)
         else:
-            ch_indices = (-1, 0)
-            wake_offset = (nano_size-1,0)
+            liquid_move = liquid_arr[y_i:y_i+nano_size, x_i-1]
+            liquid_move = liquid_move.astype(int)
 
-        #Calculate change in energy as consequence of move:
-        DeltaE = delta_E_nano(nano_move, liquid_arr, nano_arr, e_l, e_nl, e_n, ch_indices, wake_offset, nano_size, offset)
-        
-        #Compare to probability:
-        P = np.exp(-1*DeltaE/kT)
-
-        #If our prob is less than randomly generated uniform variable, do not flip.
-        if P < np.random.uniform():
+        #If the bit we're moving into do not have water in them, pass.
+        if 0 in liquid_move:
             pass
-        #Otherwise, accept flip.
+        #Now if we have all water and we're not on a boundary, we can try to move.
         else:
-            #Remove nanoparticle and fill spot with liquid:
-            nano_arr[y_i:y_i+nano_size, x_i:x_i+nano_size] = 0
-            liquid_arr[y_i:y_i+nano_size, x_i:x_i+nano_size] = 1
-            #Change our index in our list of indices...
-            nano_list_indices[nano_move][0] = x_i + ch_indices[0]
-            nano_list_indices[nano_move][1] = y_i + ch_indices[1]
-            #Add to nanoparticle placement:
-            nano_arr[y_i + ch_indices[1]:y_i + ch_indices[1]+nano_size, x_i + ch_indices[0]:x_i + ch_indices[0]+nano_size] = 1
-            #Remove from liquid array:
-            liquid_arr[y_i + ch_indices[1]:y_i + ch_indices[1]+nano_size, x_i + ch_indices[0]:x_i + ch_indices[0]+nano_size] = 0
+            if move_dir == 0:
+                ch_indices = (0, 1)
+                offset = (0, nano_size)
+                wake_offset = (0,0)
+            elif move_dir == 1:
+                ch_indices = (0, -1)
+                offset = (0,-1)
+                wake_offset = (0, nano_size-1)
+            elif move_dir == 2:
+                ch_indices = (1, 0)
+                offset = (nano_size,0)
+                wake_offset = (0,0)
+            else:
+                ch_indices = (-1, 0)
+                offset = (nano_size-1,0)
+                wake_offset = (nano_size-1,0)
+
+            #Calculate change in energy as consequence of move:
+            DeltaE = delta_E_nano((nano_list_indices[nano_move][0], nano_list_indices[nano_move][1]), liquid_arr, nano_arr, e_l, e_nl, e_n, ch_indices, wake_offset, nano_size, offset)
+            
+            #Compare to probability:
+            P = min(1, np.exp(-1*DeltaE/kT))
+            rand_var = np.random.uniform(0,1)
+
+            #If our prob is less than randomly generated uniform variable, do not flip.
+            if P < rand_var:
+                pass
+            #Otherwise, accept flip.
+            else:
+                #Remove nanoparticle and fill spot with liquid:
+                nano_arr[y_i:y_i+nano_size, x_i:x_i+nano_size] = 0
+                liquid_arr[y_i:y_i+nano_size, x_i:x_i+nano_size] = 1
+                #Change our index in our list of indices...
+                new_nano = (x_i + ch_indices[0], y_i + ch_indices[1])
+                nano_list_indices[nano_move] = new_nano
+                #Add to nanoparticle placement:
+                nano_arr[y_i + ch_indices[1]:y_i + ch_indices[1]+nano_size, x_i + ch_indices[0]:x_i + ch_indices[0]+nano_size] = 1
+                #Remove from liquid array:
+                liquid_arr[y_i + ch_indices[1]:y_i + ch_indices[1]+nano_size, x_i + ch_indices[0]:x_i + ch_indices[0]+nano_size] = 0
     
     return liquid_arr, nano_arr, nano_list_indices
             
+#Define function to perform our cycles and simulation.
+def growth_sim(x_dim, y_dim, kT, e_l, e_nl, e_n, mu, nano_size, num_cycles, num_nano_per_cycle, num_nano_attempts):
 
+    #Initialize arrays.
+    liquid_arr, nano_arr, nano_list_indices = init_arrays(x_dim, y_dim, nano_size, num_nano_attempts)
+
+    #For a number of steps.
+    for i in range(num_cycles):
+
+        #Perform a liquid step.
+        liquid_arr = liquid_step(x_dim, y_dim, liquid_arr, nano_arr, kT, e_l, e_nl, mu)
+
+        #For the number of required nanoparticle cycles:
+        for j in range(num_nano_per_cycle):
+            liquid_arr, nano_arr, nano_list_indices = nano_step(x_dim, y_dim, liquid_arr, nano_arr, nano_list_indices, kT, e_l, e_nl, e_n, nano_size)
+
+        #Convert our zeros to -1s...
+        nanopart_copy = copy.deepcopy(nano_arr)
+        nanopart_copy[nanopart_copy == 1] = 2
+
+        config = liquid_arr + nanopart_copy
+
+        #save_results_to = 'C:/Users/David/Documents/University/THM8999 PhD Thesis/Inverse Design/Growth_Sim_Plots'
+
+        script_dir = os.path.dirname(__file__)
+        results_dir = os.path.join(script_dir, 'Results/')
+
+        if not os.path.isdir(results_dir):
+            os.makedirs(results_dir)
+
+        if i == 0 or i % 10 == 0:
+            #plt.imshow(config, cmap='gray')
+            plt.imshow(config)
+            plt.xlabel('Lattice Index')
+            plt.ylabel('Lattice Index')
+            plt.title('Initial Nanoparticle Placements in Liquid')
+            #plt.show()
+            plt.savefig(results_dir + str(i) + '.png')
 
 #######################################################################
 
-liquid_arr, nano_arr, nano_list_indices = init_arrays(30, 30, 3, 5)
-        
+growth_sim(50, 50, 3, 1, 1.5, 2, -2.5, 3, 1000, 5, 10)
 
 
 
