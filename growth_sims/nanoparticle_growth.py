@@ -228,7 +228,7 @@ def nano_step(x_dim, y_dim, liquid_arr, nano_arr, nano_list_indices, kT, e_l, e_
     x_i = nano_list_indices[nano_move][0]
     y_i = nano_list_indices[nano_move][1]
 
-    print(x_i, y_i)
+    #print(x_i, y_i)
 
     #Now randomly pick a direction we'd like to try and move it in.
     #Note: 0, 1, 2, 3 = N, S, E, W, respectively.
@@ -252,13 +252,13 @@ def nano_step(x_dim, y_dim, liquid_arr, nano_arr, nano_list_indices, kT, e_l, e_
             liquid_move = liquid_arr[y_i:y_i+nano_size, x_i-1]
             liquid_move = liquid_move.astype(int)
 
-        print(liquid_move)
-
         #If the bit we're moving into do not have water in them, pass.
         if 0 in liquid_move:
             pass
         #Now if we have all water and we're not on a boundary, we can try to move.
         else:
+            #print(liquid_move)
+
             if move_dir == 0:
                 ch_indices = (0, 1)
                 offset = (0, nano_size)
@@ -288,7 +288,7 @@ def nano_step(x_dim, y_dim, liquid_arr, nano_arr, nano_list_indices, kT, e_l, e_
                 pass
             #Otherwise, accept flip.
             else:
-                #Remove nanoparticle and fill spot with liquid:
+                '''#Remove nanoparticle and fill spot with liquid:
                 nano_arr[y_i:y_i+nano_size, x_i:x_i+nano_size] = 0
                 liquid_arr[y_i:y_i+nano_size, x_i:x_i+nano_size] = 1
                 #Change our index in our list of indices...
@@ -297,7 +297,36 @@ def nano_step(x_dim, y_dim, liquid_arr, nano_arr, nano_list_indices, kT, e_l, e_
                 #Add to nanoparticle placement:
                 nano_arr[new_nano[1]:new_nano[1]+nano_size, new_nano[0]:new_nano[0]+nano_size] = 1
                 #Remove from liquid array:
-                liquid_arr[new_nano[1]:new_nano[1]+nano_size, new_nano[0]:new_nano[0]+nano_size] = 0
+                liquid_arr[new_nano[1]:new_nano[1]+nano_size, new_nano[0]:new_nano[0]+nano_size] = 0'''
+
+                if move_dir == 0:
+                    new_nano = (x_i, y_i-1)
+                    nano_list_indices[nano_move] = new_nano
+                    liquid_arr[y_i-1, x_i:x_i+nano_size] = 0 
+                    nano_arr[y_i-1, x_i:x_i+nano_size] = 1
+                    liquid_arr[y_i+nano_size, x_i:x_i+nano_size] = 1
+                    nano_arr[y_i+nano_size, x_i:x_i+nano_size] = 0
+                elif move_dir == 1:
+                    new_nano = (x_i, y_i+1)
+                    nano_list_indices[nano_move] = new_nano
+                    liquid_arr[y_i-1, x_i:x_i+nano_size] = 1
+                    nano_arr[y_i-1, x_i:x_i+nano_size] = 0
+                    liquid_arr[y_i+nano_size, x_i:x_i+nano_size] = 0
+                    nano_arr[y_i+nano_size, x_i:x_i+nano_size] = 1
+                elif move_dir == 2:
+                    new_nano = (x_i+1, y_i)
+                    nano_list_indices[nano_move] = new_nano
+                    liquid_arr[y_i:y_i+nano_size, x_i+nano_size] = 0 
+                    nano_arr[y_i:y_i+nano_size, x_i+nano_size] = 1
+                    liquid_arr[y_i:y_i+nano_size, x_i-1] = 1
+                    nano_arr[y_i:y_i+nano_size, x_i-1] = 0
+                else:
+                    new_nano = (x_i-1, y_i)
+                    nano_list_indices[nano_move] = new_nano
+                    liquid_arr[y_i:y_i+nano_size, x_i+nano_size] = 1 
+                    nano_arr[y_i:y_i+nano_size, x_i+nano_size] = 0
+                    liquid_arr[y_i:y_i+nano_size, x_i-1] = 0
+                    nano_arr[y_i:y_i+nano_size, x_i-1] = 1
     
     return liquid_arr, nano_arr, nano_list_indices
             
