@@ -236,7 +236,7 @@ def nano_step(x_dim, y_dim, liquid_arr, nano_arr, nano_list_indices, kT, e_l, e_
 
     #Now see whether we can actually move...
     #If we hit the boundary, pass.
-    if ((move_dir == 0) and ((y_i - 1) <= -1)) or ((move_dir == 1) and ((y_i + nano_size + 1) >= y_dim)) or ((move_dir == 2) and ((x_i + nano_size + 1) >= x_dim)) or ((move_dir == 3) and ((x_i - 1) <= -1)):
+    if ((move_dir == 1) and ((y_i - 1) <= -1)) or ((move_dir == 0) and ((y_i + nano_size + 1) >= y_dim)) or ((move_dir == 2) and ((x_i + nano_size + 1) >= x_dim)) or ((move_dir == 3) and ((x_i - 1) <= -1)):
         pass
     else: 
         if move_dir == 0:
@@ -251,6 +251,8 @@ def nano_step(x_dim, y_dim, liquid_arr, nano_arr, nano_list_indices, kT, e_l, e_
         else:
             liquid_move = liquid_arr[y_i:y_i+nano_size, x_i-1]
             liquid_move = liquid_move.astype(int)
+
+        print(liquid_move)
 
         #If the bit we're moving into do not have water in them, pass.
         if 0 in liquid_move:
@@ -293,9 +295,9 @@ def nano_step(x_dim, y_dim, liquid_arr, nano_arr, nano_list_indices, kT, e_l, e_
                 new_nano = (x_i + ch_indices[0], y_i + ch_indices[1])
                 nano_list_indices[nano_move] = new_nano
                 #Add to nanoparticle placement:
-                nano_arr[y_i + ch_indices[1]:y_i + ch_indices[1]+nano_size, x_i + ch_indices[0]:x_i + ch_indices[0]+nano_size] = 1
+                nano_arr[new_nano[1]:new_nano[1]+nano_size, new_nano[0]:new_nano[0]+nano_size] = 1
                 #Remove from liquid array:
-                liquid_arr[y_i + ch_indices[1]:y_i + ch_indices[1]+nano_size, x_i + ch_indices[0]:x_i + ch_indices[0]+nano_size] = 0
+                liquid_arr[new_nano[1]:new_nano[1]+nano_size, new_nano[0]:new_nano[0]+nano_size] = 0
     
     return liquid_arr, nano_arr, nano_list_indices
             
@@ -340,7 +342,7 @@ def growth_sim(x_dim, y_dim, kT, e_l, e_nl, e_n, mu, nano_size, num_cycles, num_
 
 #######################################################################
 
-growth_sim(50, 50, 3, 1, 1.5, 2, -2.5, 3, 1000, 5, 10)
+growth_sim(200, 200, 3, 1, 1.5, 2, -2.5, 3, 5000, 30, 300)
 
 
 
