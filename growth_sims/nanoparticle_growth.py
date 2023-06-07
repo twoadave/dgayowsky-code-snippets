@@ -109,7 +109,7 @@ def init_arrays(x_dim, y_dim, nano_size, num_nano_attempts):
 
     config = liquid_arr + nanopart_copy
 
-    #print(nano_list_indices)
+    print(nano_list_indices)
 
     plt.imshow(config, cmap='gray')
     plt.xlabel('Lattice Index')
@@ -236,19 +236,25 @@ def nano_step(x_dim, y_dim, liquid_arr, nano_arr, nano_list_indices, kT, e_l, e_
 
     #Now see whether we can actually move...
     #If we hit the boundary, pass.
-    if ((move_dir == 1) and ((y_i - 1) <= -1)) or ((move_dir == 0) and ((y_i + nano_size + 1) >= y_dim)) or ((move_dir == 2) and ((x_i + nano_size + 1) >= x_dim)) or ((move_dir == 3) and ((x_i - 1) <= -1)):
-        pass
-    else: 
+    '''if ((move_dir == 0) and (y_i <= 0)) or ((move_dir == 1) and ((y_i + nano_size) >= y_dim)) or ((move_dir == 2) and ((x_i + nano_size) >= x_dim)) or ((move_dir == 3) and (x_i <= 0)):
+        pass'''
+
+
+    if ((move_dir == 0) and (y_i > 0)) or ((move_dir == 1) and ((y_i + nano_size+1) < y_dim)) or ((move_dir == 2) and ((x_i + nano_size + 1) < x_dim)) or ((move_dir == 3) and (x_i > 0)):
         if move_dir == 0:
+            print(move_dir, x_i, y_i)
             liquid_move = liquid_arr[y_i-1, x_i:x_i+nano_size]
             liquid_move = liquid_move.astype(int)
         elif move_dir == 1:
+            print(move_dir, x_i, y_i)
             liquid_move = liquid_arr[y_i+nano_size, x_i:x_i+nano_size]
             liquid_move = liquid_move.astype(int)
         elif move_dir == 2:
+            print(move_dir, x_i, y_i)
             liquid_move = liquid_arr[y_i:y_i+nano_size, x_i+nano_size]
             liquid_move = liquid_move.astype(int)
         else:
+            print(move_dir, x_i, y_i)
             liquid_move = liquid_arr[y_i:y_i+nano_size, x_i-1]
             liquid_move = liquid_move.astype(int)
 
@@ -288,46 +294,53 @@ def nano_step(x_dim, y_dim, liquid_arr, nano_arr, nano_list_indices, kT, e_l, e_
                 pass
             #Otherwise, accept flip.
             else:
-                '''#Remove nanoparticle and fill spot with liquid:
+                #Remove nanoparticle and fill spot with liquid:
                 nano_arr[y_i:y_i+nano_size, x_i:x_i+nano_size] = 0
                 liquid_arr[y_i:y_i+nano_size, x_i:x_i+nano_size] = 1
                 #Change our index in our list of indices...
                 new_nano = (x_i + ch_indices[0], y_i + ch_indices[1])
                 nano_list_indices[nano_move] = new_nano
+                #Remove from liquid array:
+                liquid_arr[new_nano[1]:new_nano[1]+nano_size, new_nano[0]:new_nano[0]+nano_size] = 0
                 #Add to nanoparticle placement:
                 nano_arr[new_nano[1]:new_nano[1]+nano_size, new_nano[0]:new_nano[0]+nano_size] = 1
-                #Remove from liquid array:
-                liquid_arr[new_nano[1]:new_nano[1]+nano_size, new_nano[0]:new_nano[0]+nano_size] = 0'''
 
-                if move_dir == 0:
+
+                '''if move_dir == 0:
                     new_nano = (x_i, y_i-1)
                     nano_list_indices[nano_move] = new_nano
-                    liquid_arr[y_i-1, x_i:x_i+nano_size] = 0 
+                    liquid_arr[y_i-1, x_i:x_i+nano_size] = 0
                     nano_arr[y_i-1, x_i:x_i+nano_size] = 1
-                    liquid_arr[y_i+nano_size, x_i:x_i+nano_size] = 1
                     nano_arr[y_i+nano_size, x_i:x_i+nano_size] = 0
+                    liquid_arr[y_i+nano_size, x_i:x_i+nano_size] = 1
+                    
                 elif move_dir == 1:
                     new_nano = (x_i, y_i+1)
                     nano_list_indices[nano_move] = new_nano
-                    liquid_arr[y_i-1, x_i:x_i+nano_size] = 1
-                    nano_arr[y_i-1, x_i:x_i+nano_size] = 0
                     liquid_arr[y_i+nano_size, x_i:x_i+nano_size] = 0
                     nano_arr[y_i+nano_size, x_i:x_i+nano_size] = 1
+                    nano_arr[y_i-1, x_i:x_i+nano_size] = 0
+                    liquid_arr[y_i-1, x_i:x_i+nano_size] = 1
+                    
                 elif move_dir == 2:
                     new_nano = (x_i+1, y_i)
                     nano_list_indices[nano_move] = new_nano
-                    liquid_arr[y_i:y_i+nano_size, x_i+nano_size] = 0 
+                    liquid_arr[y_i:y_i+nano_size, x_i+nano_size] = 0
                     nano_arr[y_i:y_i+nano_size, x_i+nano_size] = 1
-                    liquid_arr[y_i:y_i+nano_size, x_i-1] = 1
                     nano_arr[y_i:y_i+nano_size, x_i-1] = 0
+                    liquid_arr[y_i:y_i+nano_size, x_i-1] = 1
+                    
                 else:
                     new_nano = (x_i-1, y_i)
                     nano_list_indices[nano_move] = new_nano
-                    liquid_arr[y_i:y_i+nano_size, x_i+nano_size] = 1 
-                    nano_arr[y_i:y_i+nano_size, x_i+nano_size] = 0
                     liquid_arr[y_i:y_i+nano_size, x_i-1] = 0
                     nano_arr[y_i:y_i+nano_size, x_i-1] = 1
-    
+                    nano_arr[y_i:y_i+nano_size, x_i+nano_size] = 0
+                    liquid_arr[y_i:y_i+nano_size, x_i+nano_size] = 1'''
+
+    else: 
+        pass
+                   
     return liquid_arr, nano_arr, nano_list_indices
             
 #Define function to perform our cycles and simulation.
@@ -362,16 +375,23 @@ def growth_sim(x_dim, y_dim, kT, e_l, e_nl, e_n, mu, nano_size, num_cycles, num_
 
         if i == 0 or i % 10 == 0:
             #plt.imshow(config, cmap='gray')
-            plt.imshow(config)
+            plt.imshow(nano_arr)
             plt.xlabel('Lattice Index')
             plt.ylabel('Lattice Index')
-            plt.title('Initial Nanoparticle Placements in Liquid')
+            plt.title('Nanoparticle Placements in Liquid')
             #plt.show()
             plt.savefig(results_dir + str(i) + '.png')
+        
+        '''plt.imshow(nano_arr)
+        plt.xlabel('Lattice Index')
+        plt.ylabel('Lattice Index')
+        plt.title('Nanoparticle Placements in Liquid')
+        plt.show()
+        plt.savefig(results_dir + str(i) + '.png')'''
 
 #######################################################################
 
-growth_sim(200, 200, 3, 1, 1.5, 2, -2.5, 3, 5000, 30, 300)
+growth_sim(10, 10, 3, 1, 1.5, 2, -2.5, 3, 10, 3, 3)
 
 
 
