@@ -86,7 +86,7 @@ def init_arrays(x_dim, y_dim, nano_size, num_nano_attempts):
     for i in range(num_nano_attempts):
 
         #Generate random index:
-        indices = (np.random.randint(0, x_dim-(nano_size)), np.random.randint(0, y_dim-(nano_size)))
+        indices = (np.random.randint(0, x_dim-nano_size-1), np.random.randint(0, y_dim-nano_size-1))
 
         #Check and see if this index is already occupied by a nanoparticle:
         nano_placement = nano_arr[indices[1]:indices[1]+nano_size, indices[0]:indices[0]+nano_size]
@@ -103,7 +103,7 @@ def init_arrays(x_dim, y_dim, nano_size, num_nano_attempts):
             #Remove from liquid array:
             liquid_arr[indices[1]:indices[1]+nano_size, indices[0]:indices[0]+nano_size] = 0
 
-    #Convert our zeros to -1s...
+    '''#Convert our zeros to -1s...
     nanopart_copy = copy.deepcopy(nano_arr)
     nanopart_copy[nanopart_copy == 1] = 2
 
@@ -115,7 +115,7 @@ def init_arrays(x_dim, y_dim, nano_size, num_nano_attempts):
     plt.xlabel('Lattice Index')
     plt.ylabel('Lattice Index')
     plt.title('Initial Nanoparticle Placements in Liquid')
-    plt.show()
+    plt.show()'''
 
     return liquid_arr, nano_arr, nano_list_indices
 
@@ -238,23 +238,46 @@ def nano_step(x_dim, y_dim, liquid_arr, nano_arr, nano_list_indices, kT, e_l, e_
     #If we hit the boundary, pass.
     '''if ((move_dir == 0) and (y_i <= 0)) or ((move_dir == 1) and ((y_i + nano_size) >= y_dim)) or ((move_dir == 2) and ((x_i + nano_size) >= x_dim)) or ((move_dir == 3) and (x_i <= 0)):
         pass'''
+    
+    boundary_hit = 0
+    
+    if move_dir == 0:
+        if y_i <= 0:
+            boundary_hit = 1
+        else:
+            pass
 
+    elif move_dir == 1:
+        if y_i >= (y_dim - 2 - nano_size):
+            boundary_hit = 1
+        else:
+            pass
+    elif move_dir == 2:
+        if x_i >= (x_dim - 2 - nano_size):
+            boundary_hit = 1
+        else:
+            pass
+    else:
+        if x_i <= 0:
+            boundary_hit = 1
+        else:
+            pass
 
-    if ((move_dir == 0) and (y_i > 0)) or ((move_dir == 1) and ((y_i + nano_size+1) < y_dim)) or ((move_dir == 2) and ((x_i + nano_size + 1) < x_dim)) or ((move_dir == 3) and (x_i > 0)):
+    if boundary_hit == 0:
         if move_dir == 0:
-            print(move_dir, x_i, y_i)
+            #print(move_dir, x_i, y_i)
             liquid_move = liquid_arr[y_i-1, x_i:x_i+nano_size]
             liquid_move = liquid_move.astype(int)
         elif move_dir == 1:
-            print(move_dir, x_i, y_i)
+            #print(move_dir, x_i, y_i)
             liquid_move = liquid_arr[y_i+nano_size, x_i:x_i+nano_size]
             liquid_move = liquid_move.astype(int)
         elif move_dir == 2:
-            print(move_dir, x_i, y_i)
+            #print(move_dir, x_i, y_i)
             liquid_move = liquid_arr[y_i:y_i+nano_size, x_i+nano_size]
             liquid_move = liquid_move.astype(int)
         else:
-            print(move_dir, x_i, y_i)
+            #print(move_dir, x_i, y_i)
             liquid_move = liquid_arr[y_i:y_i+nano_size, x_i-1]
             liquid_move = liquid_move.astype(int)
 
@@ -266,13 +289,13 @@ def nano_step(x_dim, y_dim, liquid_arr, nano_arr, nano_list_indices, kT, e_l, e_
             #print(liquid_move)
 
             if move_dir == 0:
-                ch_indices = (0, 1)
-                offset = (0, nano_size)
-                wake_offset = (0,0)
-            elif move_dir == 1:
                 ch_indices = (0, -1)
                 offset = (0,-1)
                 wake_offset = (0, nano_size-1)
+            elif move_dir == 1:
+                ch_indices = (0, 1)
+                offset = (0, nano_size)
+                wake_offset = (0,0)
             elif move_dir == 2:
                 ch_indices = (1, 0)
                 offset = (nano_size,0)
@@ -340,58 +363,90 @@ def nano_step(x_dim, y_dim, liquid_arr, nano_arr, nano_list_indices, kT, e_l, e_
 
     else: 
         pass
-                   
+
     return liquid_arr, nano_arr, nano_list_indices
             
 #Define function to perform our cycles and simulation.
-def growth_sim(x_dim, y_dim, kT, e_l, e_nl, e_n, mu, nano_size, num_cycles, num_nano_per_cycle, num_nano_attempts):
+def growth_sim(x_dim, y_dim, kT, e_l, e_nl, e_n, mu, nano_size, num_cycles, num_nano_per_cycle, num_nano_attempts, num_epochs):
+
+    #plot_count = 0
 
     #Initialize arrays.
     liquid_arr, nano_arr, nano_list_indices = init_arrays(x_dim, y_dim, nano_size, num_nano_attempts)
 
-    #For a number of steps.
-    for i in range(num_cycles):
+    #For a number of epochs.
+    for m in range(num_epochs):
 
-        #Perform a liquid step.
-        liquid_arr = liquid_step(x_dim, y_dim, liquid_arr, nano_arr, kT, e_l, e_nl, mu)
+        #For a number of steps.
+        for i in range(num_cycles):
+            #Perform a liquid step.
+            liquid_arr = liquid_step(x_dim, y_dim, liquid_arr, nano_arr, kT, e_l, e_nl, mu)
 
         #For the number of required nanoparticle cycles:
         for j in range(num_nano_per_cycle):
-            liquid_arr, nano_arr, nano_list_indices = nano_step(x_dim, y_dim, liquid_arr, nano_arr, nano_list_indices, kT, e_l, e_nl, e_n, nano_size)
 
-        #Convert our zeros to -1s...
-        nanopart_copy = copy.deepcopy(nano_arr)
-        nanopart_copy[nanopart_copy == 1] = 2
+            for p in range(len(nano_list_indices)):
 
-        config = liquid_arr + nanopart_copy
+                liquid_arr, nano_arr, nano_list_indices = nano_step(x_dim, y_dim, liquid_arr, nano_arr, nano_list_indices, kT, e_l, e_nl, e_n, nano_size)
 
-        #save_results_to = 'C:/Users/David/Documents/University/THM8999 PhD Thesis/Inverse Design/Growth_Sim_Plots'
+                '''if p == 0 or p % 100 == 0:
 
-        script_dir = os.path.dirname(__file__)
-        results_dir = os.path.join(script_dir, 'Results/')
+                    #Convert our zeros to -1s...
+                    nanopart_copy = copy.deepcopy(nano_arr)
+                    nanopart_copy[nanopart_copy == 1] = 2
 
-        if not os.path.isdir(results_dir):
-            os.makedirs(results_dir)
+                    config = liquid_arr + nanopart_copy
 
-        if i == 0 or i % 10 == 0:
-            #plt.imshow(config, cmap='gray')
-            plt.imshow(nano_arr)
-            plt.xlabel('Lattice Index')
-            plt.ylabel('Lattice Index')
-            plt.title('Nanoparticle Placements in Liquid')
-            #plt.show()
-            plt.savefig(results_dir + str(i) + '.png')
-        
-        '''plt.imshow(nano_arr)
-        plt.xlabel('Lattice Index')
-        plt.ylabel('Lattice Index')
-        plt.title('Nanoparticle Placements in Liquid')
-        plt.show()
-        plt.savefig(results_dir + str(i) + '.png')'''
+                    #save_results_to = 'C:/Users/David/Documents/University/THM8999 PhD Thesis/Inverse Design/Growth_Sim_Plots'
+
+                    script_dir = os.path.dirname(__file__)
+                    results_dir = os.path.join(script_dir, 'Results/')
+
+                    if not os.path.isdir(results_dir):
+                        os.makedirs(results_dir)
+
+
+                    #plt.imshow(config, cmap='gray')
+                    plt.imshow(config)
+                    plt.xlabel('Lattice Index')
+                    plt.ylabel('Lattice Index')
+                    plt.title('Nanoparticle Placements in Liquid')
+                    #plt.show()
+                    plt.savefig(results_dir + str(plot_count) + '.png')
+
+                    plot_count = plot_count+1'''
+            
+    #Convert our zeros to -1s...
+    nanopart_copy = copy.deepcopy(nano_arr)
+    nanopart_copy[nanopart_copy == 1] = 2
+
+    config = liquid_arr + nanopart_copy
+
+    script_dir = os.path.dirname(__file__)
+    results_dir = os.path.join(script_dir, 'Results/')
+
+    if not os.path.isdir(results_dir):
+        os.makedirs(results_dir)
+
+    plt.imshow(config)
+    plt.xlabel('Lattice Index')
+    plt.ylabel('Lattice Index')
+    plt.title('Nanoparticle Placements in Liquid')
+    plt.show()
+    plt.savefig(results_dir + 'fin.png')
 
 #######################################################################
 
-growth_sim(10, 10, 3, 1, 1.5, 2, -2.5, 3, 10, 3, 3)
+frac = 0.2
+x_dim = 1000
+y_dim = 1000
+nano_size = 3
+n_nano = int(frac*(x_dim*y_dim)/(nano_size*nano_size))
+
+nano_steps = 30
+solv_iter = x_dim*y_dim
+
+growth_sim(x_dim, y_dim, 0.2, 1, 1.5, 2, -2.5, nano_size, solv_iter, 30, n_nano, 100)
 
 
 
