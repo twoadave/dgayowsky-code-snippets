@@ -446,7 +446,11 @@ n_nano = int(frac*(x_dim*y_dim)/(nano_size*nano_size))
 nano_steps = 30
 solv_iter = x_dim*y_dim
 
-growth_sim(x_dim, y_dim, 0.2, 1, 1.5, 2, -2.5, nano_size, solv_iter, 30, n_nano, 100)
+kbT = 0.2
+
+num_epochs = 1000
+
+growth_sim(x_dim, y_dim, kbT, 1, 1.5, 2, -2.5, nano_size, solv_iter, 30, n_nano, num_epochs)
 
 
 
