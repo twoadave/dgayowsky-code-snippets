@@ -190,6 +190,12 @@ def delta_E_nano(nano_move, liquid_arr, nano_arr, e_l, e_nl, e_n, ch_indices, wa
         delta_e += bond_ch((x_i,y_i), ch_indices, liquid_arr, nano_arr, e_l, e_nl, e_n)
         delta_e += bond_ch((x_i_wake,y_i_wake),(-ch_indices[0],-ch_indices[1]), liquid_arr, nano_arr, e_l, e_nl, e_n)
 
+        #Second nearest neighbours
+        delta_e += (1/math.sqrt(2))*bond_ch((x_i,y_i),(ch_indices[0]+ch_indices[1],ch_indices[1]+ch_indices[0]), liquid_arr, nano_arr, e_l, e_nl, e_n)
+        delta_e += (1/math.sqrt(2))*bond_ch((x_i,y_i),(ch_indices[0]-ch_indices[1],ch_indices[1]-ch_indices[0]), liquid_arr, nano_arr, e_l, e_nl, e_n)
+        delta_e += (1/math.sqrt(2))*bond_ch((x_i_wake,y_i_wake),(-ch_indices[0]+ch_indices[1],-ch_indices[1]+ch_indices[0]), liquid_arr, nano_arr, e_l, e_nl, e_n)                
+        delta_e += (1/math.sqrt(2))*bond_ch((x_i_wake,y_i_wake),(-ch_indices[0]-ch_indices[1],-ch_indices[1]-ch_indices[0]), liquid_arr, nano_arr, e_l, e_nl, e_n)
+
     delta_e *= (1/(1+1/math.sqrt(2)))
     return delta_e
 
