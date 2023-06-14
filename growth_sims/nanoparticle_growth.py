@@ -196,6 +196,21 @@ def delta_E_nano(nano_move, liquid_arr, nano_arr, e_l, e_nl, e_n, ch_indices, wa
         delta_e += (1/math.sqrt(2))*bond_ch((x_i_wake,y_i_wake),(-ch_indices[0]+ch_indices[1],-ch_indices[1]+ch_indices[0]), liquid_arr, nano_arr, e_l, e_nl, e_n)                
         delta_e += (1/math.sqrt(2))*bond_ch((x_i_wake,y_i_wake),(-ch_indices[0]-ch_indices[1],-ch_indices[1]-ch_indices[0]), liquid_arr, nano_arr, e_l, e_nl, e_n)
 
+        #Extra contributions needed if nanoparticle cells at end
+        if i == 0:
+            delta_e += bond_ch((x_i,y_i),(-abs(ch_indices[1]),-abs(ch_indices[0])), liquid_arr, nano_arr, e_l, e_nl, e_n)
+            delta_e += bond_ch((x_i_wake,y_i_wake),(-abs(ch_indices[1]),-abs(ch_indices[0])), liquid_arr, nano_arr, e_l, e_nl, e_n)
+                    
+            delta_e += (1/math.sqrt(2))*bond_ch((x_i,y_i),(-ch_indices[0]-abs(ch_indices[1]),-ch_indices[1]-abs(ch_indices[0])), liquid_arr, nano_arr, e_l, e_nl, e_n)
+            delta_e += (1/math.sqrt(2))*bond_ch((x_i_wake,y_i_wake),(ch_indices[0]-abs(ch_indices[1]),ch_indices[1]-abs(ch_indices[0])), liquid_arr, nano_arr, e_l, e_nl, e_n)   
+
+        elif i == (nano_size-1):
+            delta_e += bond_ch((x_i,y_i),(abs(ch_indices[1]),abs(ch_indices[0])), liquid_arr, nano_arr, e_l, e_nl, e_n)
+            delta_e += bond_ch((x_i_wake,y_i_wake),(abs(ch_indices[1]),abs(ch_indices[0])), liquid_arr, nano_arr, e_l, e_nl, e_n)
+                    
+            delta_e += (1/math.sqrt(2))*bond_ch((x_i,y_i),(-ch_indices[0]+abs(ch_indices[1]),-ch_indices[1]+abs(ch_indices[0])), liquid_arr, nano_arr, e_l, e_nl, e_n)
+            delta_e += (1/math.sqrt(2))*bond_ch((x_i_wake,y_i_wake),(ch_indices[0]+abs(ch_indices[1]),ch_indices[1]+abs(ch_indices[0])), liquid_arr, nano_arr, e_l, e_nl, e_n)
+
     delta_e *= (1/(1+1/math.sqrt(2)))
     return delta_e
 
@@ -443,7 +458,7 @@ def growth_sim(x_dim, y_dim, kT, e_l, e_nl, e_n, mu, nano_size, num_cycles, num_
 
 #######################################################################
 
-frac = 0.6
+frac = 0.2
 x_dim = 1000
 y_dim = 1000
 nano_size = 3
@@ -452,7 +467,7 @@ n_nano = int(frac*(x_dim*y_dim)/(nano_size*nano_size))
 nano_steps = 30
 solv_iter = x_dim*y_dim
 
-kbT = 0.4
+kbT = 0.2
 
 num_epochs = 1000
 
