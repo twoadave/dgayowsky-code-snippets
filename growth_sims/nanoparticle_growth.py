@@ -458,7 +458,7 @@ def growth_sim(x_dim, y_dim, kT, e_l, e_nl, e_n, mu, nano_size, num_cycles, num_
 
 #######################################################################
 
-frac = 0.2
+frac = 0.3
 x_dim = 1000
 y_dim = 1000
 nano_size = 3
@@ -467,7 +467,7 @@ n_nano = int(frac*(x_dim*y_dim)/(nano_size*nano_size))
 nano_steps = 30
 solv_iter = x_dim*y_dim
 
-kbT = 0.2
+kbT = 0.1
 
 num_epochs = 1000
 
