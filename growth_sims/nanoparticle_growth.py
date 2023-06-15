@@ -467,7 +467,7 @@ n_nano = int(frac*(x_dim*y_dim)/(nano_size*nano_size))
 nano_steps = 30
 solv_iter = x_dim*y_dim
 
-kbT = 0.1
+kbT = 0.15
 
 num_epochs = 1000
 
