@@ -455,13 +455,13 @@ def growth_sim(x_dim, y_dim, kT, e_l, e_nl, e_n, mu, nano_size, num_cycles, num_
     plt.imshow(config)
     plt.xlabel('Lattice Index')
     plt.ylabel('Lattice Index')
-    plt.title('Nanoparticle Placements in Liquid')
+    plt.title('Nanoparticle Placements in Liquid \n kbT = ' + str(kbT) + ', Fraction = ' + str(frac) + ', ' + str(num_epochs) + ' Epochs')
     plt.show()
     plt.savefig(results_dir + 'fin.png')
 
 #######################################################################
 
-frac = 0.3
+frac = 0.4
 x_dim = 1000
 y_dim = 1000
 nano_size = 3
@@ -470,7 +470,7 @@ n_nano = int(frac*(x_dim*y_dim)/(nano_size*nano_size))
 nano_steps = 30
 solv_iter = x_dim*y_dim
 
-kbT = 0.15
+kbT = 0.11
 
 num_epochs = 1000
 
