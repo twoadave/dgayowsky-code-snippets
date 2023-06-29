@@ -323,7 +323,7 @@ def nano_step(x_dim, y_dim, liquid_arr, nano_arr, nano_list_indices, kT, e_l, e_
                 wake_offset = (0,0)
             else:
                 ch_indices = (-1, 0)
-                offset = (nano_size-1,0)
+                offset = (-1,0)
                 wake_offset = (nano_size-1,0)
 
             #Calculate change in energy as consequence of move:
@@ -388,7 +388,10 @@ def nano_step(x_dim, y_dim, liquid_arr, nano_arr, nano_list_indices, kT, e_l, e_
     return liquid_arr, nano_arr, nano_list_indices
             
 #Define function to perform our cycles and simulation.
-def growth_sim(x_dim, y_dim, kT, e_l, e_nl, e_n, mu, nano_size, num_cycles, num_nano_per_cycle, num_nano_attempts, num_epochs):
+def growth_sim(x_dim, y_dim, kT, e_l, e_nl, e_n, mu, nano_size, num_cycles, num_nano_per_cycle, num_nano_attempts, num_epochs, seed):
+
+     #Initialize RNG seed
+    np.random.seed(seed)
 
     #plot_count = 0
 
@@ -471,7 +474,9 @@ kbT = 0.15
 
 num_epochs = 1000
 
-growth_sim(x_dim, y_dim, kbT, 1, 1.5, 2, -2.5, nano_size, solv_iter, 30, n_nano, num_epochs)
+seed = 17
+
+growth_sim(x_dim, y_dim, kbT, 1, 1.5, 2, -2.5, nano_size, solv_iter, 30, n_nano, num_epochs, seed)
 
 
 
