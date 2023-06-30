@@ -456,8 +456,8 @@ def growth_sim(x_dim, y_dim, kT, e_l, e_nl, e_n, mu, nano_size, num_cycles, num_
     plt.xlabel('Lattice Index')
     plt.ylabel('Lattice Index')
     plt.title('Nanoparticle Placements in Liquid \n kbT = ' + str(kbT) + ', Fraction = ' + str(frac) + ', ' + str(num_epochs) + ' Epochs')
+    plt.savefig(results_dir + 'kbt_011_frac_04_1000epochs_fin.png')
     plt.show()
-    plt.savefig(results_dir + 'fin.png')
 
 #######################################################################
 
