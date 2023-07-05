@@ -292,25 +292,25 @@ def nano_step(x_dim, y_dim, liquid_arr, nano_arr, nano_list_indices, kT, e_l, e_
             liquid_move = liquid_arr[y_i-1, x_i:x_i+nano_size]
             liquid_move = liquid_move.astype(int)
             nano_test = nano_arr[y_i-1, x_i:x_i+nano_size]
-            nano_test = nano_move.astype(int)
+            nano_test = nano_test.astype(int)
         elif move_dir == 1:
             #print(move_dir, x_i, y_i)
             liquid_move = liquid_arr[y_i+nano_size, x_i:x_i+nano_size]
             liquid_move = liquid_move.astype(int)
             nano_test = nano_arr[y_i+nano_size, x_i:x_i+nano_size]
-            nano_test = nano_move.astype(int)
+            nano_test = nano_test.astype(int)
         elif move_dir == 2:
             #print(move_dir, x_i, y_i)
             liquid_move = liquid_arr[y_i:y_i+nano_size, x_i+nano_size]
             liquid_move = liquid_move.astype(int)
             nano_test = nano_arr[y_i:y_i+nano_size, x_i+nano_size]
-            nano_test = nano_move.astype(int)
+            nano_test = nano_test.astype(int)
         else:
             #print(move_dir, x_i, y_i)
             liquid_move = liquid_arr[y_i:y_i+nano_size, x_i-1]
             liquid_move = liquid_move.astype(int)
             nano_test = nano_arr[y_i:y_i+nano_size, x_i+nano_size]
-            nano_test = nano_move.astype(int)
+            nano_test = nano_test.astype(int)
 
         #If the bit we're moving into do not have water in them, or if our path is blocked by a nanoparticle, pass.
         if (0 in liquid_move) or (1 in nano_test):
@@ -472,7 +472,7 @@ def growth_sim(x_dim, y_dim, kT, e_l, e_nl, e_n, mu, nano_size, num_cycles, num_
 
 #######################################################################
 
-frac = 0.3
+frac = 0.2
 x_dim = 1000
 y_dim = 1000
 nano_size = 3
@@ -481,11 +481,11 @@ num_nano_attempts = 100
 nano_steps = 30
 solv_iter = x_dim*y_dim
 
-kbT = 0.15
+kbT = 0.2
 
 num_epochs = 1000
 
-seed = 18
+seed = 12
 
 growth_sim(x_dim, y_dim, kbT, 1, 1.5, 2, -2.5, nano_size, solv_iter, 30, num_nano_attempts, num_epochs, seed)
 
