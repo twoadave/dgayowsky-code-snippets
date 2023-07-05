@@ -223,7 +223,7 @@ def liquid_step(x_dim, y_dim, liquid_arr, nano_arr, kT, e_l, e_nl, mu):
     flip_index = (np.random.randint(0, x_dim-2), np.random.randint(0, y_dim-2))
 
     #Check if we can perform that flip:
-    if liquid_arr[flip_index[0], flip_index[1]] == 0:
+    if nano_arr[flip_index[0], flip_index[1]] == 1:
         pass
     else:
         #Calculate energy change:
@@ -239,7 +239,7 @@ def liquid_step(x_dim, y_dim, liquid_arr, nano_arr, kT, e_l, e_nl, mu):
             pass
         #Otherwise, accept flip.
         else:
-            liquid_arr[flip_index[0], flip_index[1]] = 0
+            liquid_arr[flip_index[0], flip_index[1]] = 1 - liquid_arr[flip_index[0], flip_index[1]] 
     
     return liquid_arr
 
@@ -291,21 +291,29 @@ def nano_step(x_dim, y_dim, liquid_arr, nano_arr, nano_list_indices, kT, e_l, e_
             #print(move_dir, x_i, y_i)
             liquid_move = liquid_arr[y_i-1, x_i:x_i+nano_size]
             liquid_move = liquid_move.astype(int)
+            nano_test = nano_arr[y_i-1, x_i:x_i+nano_size]
+            nano_test = nano_move.astype(int)
         elif move_dir == 1:
             #print(move_dir, x_i, y_i)
             liquid_move = liquid_arr[y_i+nano_size, x_i:x_i+nano_size]
             liquid_move = liquid_move.astype(int)
+            nano_test = nano_arr[y_i+nano_size, x_i:x_i+nano_size]
+            nano_test = nano_move.astype(int)
         elif move_dir == 2:
             #print(move_dir, x_i, y_i)
             liquid_move = liquid_arr[y_i:y_i+nano_size, x_i+nano_size]
             liquid_move = liquid_move.astype(int)
+            nano_test = nano_arr[y_i:y_i+nano_size, x_i+nano_size]
+            nano_test = nano_move.astype(int)
         else:
             #print(move_dir, x_i, y_i)
             liquid_move = liquid_arr[y_i:y_i+nano_size, x_i-1]
             liquid_move = liquid_move.astype(int)
+            nano_test = nano_arr[y_i:y_i+nano_size, x_i+nano_size]
+            nano_test = nano_move.astype(int)
 
-        #If the bit we're moving into do not have water in them, pass.
-        if 0 in liquid_move:
+        #If the bit we're moving into do not have water in them, or if our path is blocked by a nanoparticle, pass.
+        if (0 in liquid_move) or (1 in nano_test):
             pass
         #Now if we have all water and we're not on a boundary, we can try to move.
         else:
@@ -332,7 +340,7 @@ def nano_step(x_dim, y_dim, liquid_arr, nano_arr, nano_list_indices, kT, e_l, e_
             DeltaE = delta_E_nano((nano_list_indices[nano_move][0], nano_list_indices[nano_move][1]), liquid_arr, nano_arr, e_l, e_nl, e_n, ch_indices, wake_offset, nano_size, offset)
             
             #Compare to probability:
-            P = min(1, np.exp(-1*DeltaE/kT))
+            P = min(1, np.exp(-DeltaE/kT))
             rand_var = np.random.uniform(0,1)
 
             #If our prob is less than randomly generated uniform variable, do not flip.
@@ -464,7 +472,7 @@ def growth_sim(x_dim, y_dim, kT, e_l, e_nl, e_n, mu, nano_size, num_cycles, num_
 
 #######################################################################
 
-frac = 0.2
+frac = 0.3
 x_dim = 1000
 y_dim = 1000
 nano_size = 3
@@ -473,7 +481,7 @@ num_nano_attempts = 100
 nano_steps = 30
 solv_iter = x_dim*y_dim
 
-kbT = 0.2
+kbT = 0.15
 
 num_epochs = 1000
 
