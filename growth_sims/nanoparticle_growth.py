@@ -70,7 +70,7 @@ nano_size = 3'''
 #######################################################################
 
 #Define function to initialize water/vapour and nanoparticle arrays.
-def init_arrays(x_dim, y_dim, nano_size, num_nano_attempts):
+def init_arrays(x_dim, y_dim, nano_size, num_nano_attempts, n_nano):
 
     #Initial liquid array should be all liquid.
     liquid_arr = np.ones((x_dim, y_dim))
@@ -82,40 +82,42 @@ def init_arrays(x_dim, y_dim, nano_size, num_nano_attempts):
 
     nano_list_indices = []
 
-    #Now attempt to populate nanoparticle array with nanoparticles.
-    for i in range(num_nano_attempts):
+    for j in range(n_nano):
 
-        #Generate random index:
-        indices = (np.random.randint(0, x_dim-nano_size-1), np.random.randint(0, y_dim-nano_size-1))
+        #Now attempt to populate nanoparticle array with nanoparticles.
+        for i in range(num_nano_attempts):
 
-        #Check and see if this index is already occupied by a nanoparticle:
-        nano_placement = nano_arr[indices[1]:indices[1]+nano_size, indices[0]:indices[0]+nano_size]
-        
-        #If any value in our nano placements are 1, we don't add this particle.
-        if any(1 in x for x in nano_placement):
-            pass
-        else:
-            #Now if those spots are empty, we accept the nanoparticle and add it to our arrays.
-            #Add to list of nano indices:
-            nano_list_indices.append(indices)
-            #Add to nanoparticle placement:
-            nano_arr[indices[1]:indices[1]+nano_size, indices[0]:indices[0]+nano_size] = 1
-            #Remove from liquid array:
-            liquid_arr[indices[1]:indices[1]+nano_size, indices[0]:indices[0]+nano_size] = 0
+            #Generate random index:
+            indices = (np.random.randint(0, x_dim-nano_size-1), np.random.randint(0, y_dim-nano_size-1))
 
-    '''#Convert our zeros to -1s...
+            #Check and see if this index is already occupied by a nanoparticle:
+            nano_placement = nano_arr[indices[1]:indices[1]+nano_size, indices[0]:indices[0]+nano_size]
+            
+            #If any value in our nano placements are 1, we don't add this particle.
+            if any(1 in x for x in nano_placement):
+                pass
+            else:
+                #Now if those spots are empty, we accept the nanoparticle and add it to our arrays.
+                #Add to list of nano indices:
+                nano_list_indices.append(indices)
+                #Add to nanoparticle placement:
+                nano_arr[indices[1]:indices[1]+nano_size, indices[0]:indices[0]+nano_size] = 1
+                #Remove from liquid array:
+                liquid_arr[indices[1]:indices[1]+nano_size, indices[0]:indices[0]+nano_size] = 0
+                #Now we've placed a nanoparticle, so break the for loop.
+                break
+
+    #Convert our zeros to -1s...
     nanopart_copy = copy.deepcopy(nano_arr)
     nanopart_copy[nanopart_copy == 1] = 2
 
     config = liquid_arr + nanopart_copy
 
-    print(nano_list_indices)
-
     plt.imshow(config, cmap='gray')
     plt.xlabel('Lattice Index')
     plt.ylabel('Lattice Index')
     plt.title('Initial Nanoparticle Placements in Liquid')
-    plt.show()'''
+    plt.show()
 
     return liquid_arr, nano_arr, nano_list_indices
 
@@ -393,10 +395,11 @@ def growth_sim(x_dim, y_dim, kT, e_l, e_nl, e_n, mu, nano_size, num_cycles, num_
      #Initialize RNG seed
     np.random.seed(seed)
 
-    #plot_count = 0
+    #How many nanoparticles we actually want, based on coverage.
+    n_nano = int(frac*(x_dim*y_dim)/(nano_size*nano_size))
 
     #Initialize arrays.
-    liquid_arr, nano_arr, nano_list_indices = init_arrays(x_dim, y_dim, nano_size, num_nano_attempts)
+    liquid_arr, nano_arr, nano_list_indices = init_arrays(x_dim, y_dim, nano_size, num_nano_attempts, n_nano)
 
     #For a number of epochs.
     for m in range(num_epochs):
@@ -456,27 +459,27 @@ def growth_sim(x_dim, y_dim, kT, e_l, e_nl, e_n, mu, nano_size, num_cycles, num_
     plt.xlabel('Lattice Index')
     plt.ylabel('Lattice Index')
     plt.title('Nanoparticle Placements in Liquid \n kbT = ' + str(kbT) + ', Fraction = ' + str(frac) + ', ' + str(num_epochs) + ' Epochs')
-    plt.savefig(results_dir + 'kbt_011_frac_04_1000epochs_fin.png')
+    plt.savefig(results_dir + 'kbt_02_frac_02_1000epochs_fin.png')
     plt.show()
 
 #######################################################################
 
-frac = 0.4
+frac = 0.2
 x_dim = 1000
 y_dim = 1000
 nano_size = 3
-n_nano = int(frac*(x_dim*y_dim)/(nano_size*nano_size))
+num_nano_attempts = 100
 
 nano_steps = 30
 solv_iter = x_dim*y_dim
 
-kbT = 0.11
+kbT = 0.2
 
 num_epochs = 1000
 
-seed = 17
+seed = 18
 
-growth_sim(x_dim, y_dim, kbT, 1, 1.5, 2, -2.5, nano_size, solv_iter, 30, n_nano, num_epochs, seed)
+growth_sim(x_dim, y_dim, kbT, 1, 1.5, 2, -2.5, nano_size, solv_iter, 30, num_nano_attempts, num_epochs, seed)
 
 
 
