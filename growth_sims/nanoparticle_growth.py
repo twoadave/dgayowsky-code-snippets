@@ -223,7 +223,7 @@ def liquid_step(x_dim, y_dim, liquid_arr, nano_arr, kT, e_l, e_nl, mu):
     flip_index = (np.random.randint(0, x_dim-2), np.random.randint(0, y_dim-2))
 
     #Check if we can perform that flip:
-    if nano_arr[flip_index[0], flip_index[1]] == 1:
+    if liquid_arr[flip_index[0], flip_index[1]] == 0:
         pass
     else:
         #Calculate energy change:
@@ -239,7 +239,7 @@ def liquid_step(x_dim, y_dim, liquid_arr, nano_arr, kT, e_l, e_nl, mu):
             pass
         #Otherwise, accept flip.
         else:
-            liquid_arr[flip_index[0], flip_index[1]] = 1 - liquid_arr[flip_index[0], flip_index[1]] 
+            liquid_arr[flip_index[0], flip_index[1]] = 0
     
     return liquid_arr
 
