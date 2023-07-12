@@ -463,6 +463,55 @@ class Growth_NonPeriodic:
 
 #######################################################################
 
-    
+#Function to actually run our code:
+def growth_sim(num_epochs):
+
+    #Declare our values for simulation,
+    x_dim = 1000
+    y_dim = 1000
+    frac = 0.2
+    nano_size = 3
+    KbT = 0.2
+    mu = -2.5
+    KbT = 0.2
+    e_nn = 2
+    e_nl = 1.5
+    e_ll = 1
+    nano_mob = 30
+    n_nano = int(frac*(x_dim*y_dim)/(nano_size*nano_size))
+    seed = 27
+
+    #Pass to class (Growth_NonPeriodic) object (growth_run)
+    growth_run = Growth_NonPeriodic(x_dim, y_dim, n_nano, KbT, mu, e_nn, e_nl, e_ll, nano_mob, nano_size, seed)
+
+    #Initialize nanoparticles:
+    growth_run.initialize_nano()
+
+    #Now actually run the simulation:
+    for i in range(num_epochs):
+        growth_run.step_simulation()
+
+    #Now grab our arrays and make a picture.
+    nano_array = copy.deepcopy(growth_run.nano)
+    nano_array[nano_array == 1] = 2
+
+    config = growth_run.fluid + nano_array
+
+    script_dir = os.path.dirname(__file__)
+    results_dir = os.path.join(script_dir, 'Results/')
+
+    if not os.path.isdir(results_dir):
+        os.makedirs(results_dir)
+
+    plt.imshow(config)
+    plt.xlabel('Lattice Index')
+    plt.ylabel('Lattice Index')
+    plt.title('Nanoparticle Placements in Liquid \n kbT = ' + str(KbT) + ', Fraction = ' + str(frac) + ', ' + str(num_epochs) + ' Epochs')
+    plt.savefig(results_dir + 'kbt_' + str(int(KbT*10)) + '_frac_' + str(int(frac*10)) + '_' + str(num_epochs) + 'epochs_fin.png')
+    plt.show()
+
 
 #######################################################################
+
+#Main: Let's run some code:
+growth_sim(10)
