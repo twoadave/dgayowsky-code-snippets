@@ -469,9 +469,9 @@ def growth_sim(num_epochs):
     #Declare our values for simulation,
     x_dim = 1000
     y_dim = 1000
-    frac = 0.2
+    frac = 0.6
     nano_size = 3
-    KbT = 0.2
+    KbT = 0.4
     mu = -2.5
     KbT = 0.2
     e_nn = 2
@@ -479,7 +479,7 @@ def growth_sim(num_epochs):
     e_ll = 1
     nano_mob = 30
     n_nano = int(frac*(x_dim*y_dim)/(nano_size*nano_size))
-    seed = 27
+    seed = np.random.randint(1,100)
 
     #Pass to class (Growth_NonPeriodic) object (growth_run)
     growth_run = Growth_NonPeriodic(x_dim, y_dim, n_nano, KbT, mu, e_nn, e_nl, e_ll, nano_mob, nano_size, seed)
@@ -514,4 +514,4 @@ def growth_sim(num_epochs):
 #######################################################################
 
 #Main: Let's run some code:
-growth_sim(10)
+growth_sim(1000)
