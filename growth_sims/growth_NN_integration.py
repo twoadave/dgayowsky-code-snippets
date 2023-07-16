@@ -469,11 +469,10 @@ def growth_sim(num_epochs):
     #Declare our values for simulation,
     x_dim = 1000
     y_dim = 1000
-    frac = 0.6
+    frac = 0.4
     nano_size = 3
-    KbT = 0.4
-    mu = -2.5
     KbT = 0.2
+    mu = -2.5
     e_nn = 2
     e_nl = 1.5
     e_ll = 1
@@ -514,4 +513,4 @@ def growth_sim(num_epochs):
 #######################################################################
 
 #Main: Let's run some code:
-growth_sim(1000)
+growth_sim(5000)
