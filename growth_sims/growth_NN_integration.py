@@ -27,30 +27,17 @@ from numba.types import UniTuple
 from typing import List
 from numba.typed import List as NumbaList
 
-#######################################################################
+import torch
+import torch.optim as optim
+import torch.nn as nn
+from torch.nn import Linear, ReLU, Sigmoid, Module, BCELoss, Softmax
+from torch import Tensor
+from torch.utils.data import DataLoader
+from torchvision import datasets, transforms
+from torch.utils.data import Dataset, TensorDataset, DataLoader
+from torch.utils.data.dataset import random_split
 
-'''1. Start with two 2D arrays, one containing liquid (li = 1, vi = 0) or 
-vapour (vi = 1, li = 0), the other containing nanoparticle sites (ni = 0, 1). 
-Nanoparticle sites exclude liquid or gas, just nanoparticle.
-
-2. Choose a selection of N random sites in the liquid array to attempt to change state. 
-
-3. Calculate change in energy ΔE of state change, taking into account NNN interactions.
-
-4. Calculate probability of energy change, and compare to x in U(0,1). If prob > x, 
-accept. If prob < x, deny. 
-
-5. Attempt to move a nanoparticle by one step in a randomized direction (random walk). 
-
-6. Accept move IFF the lattice spots the nanoparticle is moving to are completely 
-filled with liquid, and accept only with metropolis probability above.
-
-7. If move is accepted, fill displaced spots with fluid.
-
-8. Repeat steps 5-7 P number of times per each liquid cycle, and do so for a number 
-of random nanoparticles M each cycle (i.e. 30 nanoparticle cycles per solvent cycle).
-
-9. Repeat until we have completed a set number of cycles. '''
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 #######################################################################
 
@@ -62,21 +49,6 @@ e_nl: nano-solvent attraction
 e_ll: solvent-solvent attraction -- All other attractions and mu are given in relation to this, leave as 1'''
 
 #######################################################################
-
-'''Default arguments to (mostly) match paper: 
-y_dim = 1000
-x_dim = 1000
-frac = 0.3
-mu = -2.5
-kT = 0.2
-e_n = 2
-e_nl = 1.5
-e_l = 1
-nano_steps = 30 (Per Solvent Step)
-nano_size = 3'''
-
-#######################################################################
-
 
 '''
 --------------------------------------------------------
@@ -508,7 +480,6 @@ def growth_sim(num_epochs):
     plt.title('Nanoparticle Placements in Liquid \n kbT = ' + str(KbT) + ', Fraction = ' + str(frac) + ', ' + str(num_epochs) + ' Epochs')
     plt.savefig(results_dir + 'kbt_' + str(int(KbT*10)) + '_frac_' + str(int(frac*10)) + '_' + str(num_epochs) + 'epochs_fin.png')
     plt.show()
-
 
 #######################################################################
 
