@@ -536,4 +536,5 @@ class NeuralNetwork(nn.Module):
 #######################################################################
 
 #Main: Let's run some code:
-growth_sim(5000)
+fluid_arr, nano_arr = growth_sim(5000)
+scores = Score_Growth(fluid_arr)
