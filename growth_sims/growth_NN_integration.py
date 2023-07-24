@@ -441,7 +441,7 @@ def growth_sim(num_epochs):
     #Declare our values for simulation,
     x_dim = 1000
     y_dim = 1000
-    frac = 0.4
+    frac = 0.2
     nano_size = 3
     KbT = 0.2
     mu = -2.5
@@ -486,15 +486,15 @@ def growth_sim(num_epochs):
 #######################################################################
 
 #Function that scores growth based on mean nano cluster size     
-def Score_Growth(fluid_array):
+def Score_Growth(nano_array):
     
     target_size = 100
 
-    fluid_array[fluid_array == 0] = 2
-    fluid_array[fluid_array == 1] = 0 
-    fluid_array[fluid_array == 2] = 1
+    nano_array[nano_array == 0] = 2
+    nano_array[nano_array == 1] = 0 
+    nano_array[nano_array == 2] = 1
     
-    label, n = sp.ndimage.label(fluid_array)
+    label, n = sp.ndimage.label(nano_array)
 
     print(label)
 
@@ -510,14 +510,14 @@ def Score_Growth(fluid_array):
         if label[0,xy] > 0 and label[-1,xy] > 0:
             label[label == label[-1,xy]] = label[0,xy]
     
-    summed_labels = sp.ndimage.sum_labels(fluid_array,label,range(1,n+1))
+    summed_labels = sp.ndimage.sum_labels(nano_array,label,range(1,n+1))
     
     return -abs(target_size-np.mean(summed_labels,where=summed_labels>0))
 
 #######################################################################
 
 #Create class for our NN:
-class NeuralNetwork(nn.Module):
+'''class NeuralNetwork(nn.Module):
     
     def __init__(self):
         super(NeuralNetwork, self).__init__()
@@ -531,10 +531,10 @@ class NeuralNetwork(nn.Module):
         #self.soft = nn.Softmax(dim = 0)
         #self.dropout = nn.Dropout(p=0.2)
         self.batchnorm1 = nn.BatchNorm1d(64)
-        self.batchnorm2 = nn.BatchNorm1d(32)
+        self.batchnorm2 = nn.BatchNorm1d(32)'''
 
 #######################################################################
 
 #Main: Let's run some code:
-fluid_arr, nano_arr = growth_sim(5000)
-scores = Score_Growth(fluid_arr)
+fluid_arr, nano_arr = growth_sim(1000)
+scores = Score_Growth(nano_arr)
