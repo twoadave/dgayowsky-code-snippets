@@ -481,6 +481,58 @@ def growth_sim(num_epochs):
     plt.savefig(results_dir + 'kbt_' + str(int(KbT*10)) + '_frac_' + str(int(frac*10)) + '_' + str(num_epochs) + 'epochs_fin.png')
     plt.show()
 
+    return growth_run.fluid, growth_run.nano
+
+#######################################################################
+
+#Function that scores growth based on mean nano cluster size     
+def Score_Growth(fluid_array):
+    
+    target_size = 100
+
+    fluid_array[fluid_array == 0] = 2
+    fluid_array[fluid_array == 1] = 0 
+    fluid_array[fluid_array == 2] = 1
+    
+    label, n = sp.ndimage.label(fluid_array)
+
+    print(label)
+
+    plt.imshow(label)
+    plt.xlabel('Lattice Index')
+    plt.ylabel('Lattice Index')
+    plt.title('Hole Labelling for Nanoparticle Growth Simulation')
+    plt.show()
+
+    for xy in range(label.shape[0]):
+        if label[xy,0] > 0 and label[xy,-1] > 0:
+            label[label == label[xy,-1]] = label[xy,0]
+        if label[0,xy] > 0 and label[-1,xy] > 0:
+            label[label == label[-1,xy]] = label[0,xy]
+    
+    summed_labels = sp.ndimage.sum_labels(fluid_array,label,range(1,n+1))
+    
+    return -abs(target_size-np.mean(summed_labels,where=summed_labels>0))
+
+#######################################################################
+
+#Create class for our NN:
+class NeuralNetwork(nn.Module):
+    
+    def __init__(self):
+        super(NeuralNetwork, self).__init__()
+        # Input 16 spins, then increase number of nodes, then decrease to number
+        #of classes ie. number of possible energy states.
+        self.layer_1 = nn.Linear(16, 64) 
+        self.layer_2 = nn.Linear(64, 32)
+        self.layer_out = nn.Linear(32, 15) 
+        
+        self.relu = nn.ReLU()
+        #self.soft = nn.Softmax(dim = 0)
+        #self.dropout = nn.Dropout(p=0.2)
+        self.batchnorm1 = nn.BatchNorm1d(64)
+        self.batchnorm2 = nn.BatchNorm1d(32)
+
 #######################################################################
 
 #Main: Let's run some code:
