@@ -541,10 +541,7 @@ def Score_Growth(nano_array):
 
 #######################################################################
 
-def neural_network_growth(N_steps, steps_at_cycle, initial_weights):
-
-    #Initialize score value.
-    score = 10000
+def neural_network_growth_single_run(N_steps, steps_at_cycle, weights):
 
     #1. Initialize growth simulation and neural network with random seed and particular weights, dictate total N steps.
     iterations = N_steps/steps_at_cycle
@@ -569,32 +566,48 @@ def neural_network_growth(N_steps, steps_at_cycle, initial_weights):
     #Initialize nanoparticles:
     growth_run.initialize_nano()
 
-    weights = initial_weights
     total_steps = 0
 
-    #9. Repeat 1-8 until particular “goodness threshold” is reached.
-    while abs(score) > 50:
+    for i in range(iterations):
 
-        for i in range(iterations):
-            for j in range(steps_at_cycle):
+        for j in range(steps_at_cycle):
                 
-                #2. Run growth for 50 steps (time-based) at fixed KbT.
-                growth_run.step_simulation()
-                total_steps += 1
+            #2. Run growth for 50 steps (time-based) at fixed KbT.
+            growth_run.step_simulation()
+            total_steps += 1
 
-            #3. Input growth step number divided by N to neural network (meaning input in range 0-1).
+        #3. Input growth step number divided by N to neural network (meaning input in range 0-1).
 
-            NN_input = total_steps/N_steps
+        NN_input = total_steps/N_steps
 
-            #4. Neural network suggests action (i.e. what KbT should be) that will elicit greater hole size.
+        #4. Neural network suggests action (i.e. what KbT should be) that will elicit greater hole size.
+    
+    return growth_run.nano
+
+#Define function to perform monte-carlo simulation over neural networks:
+def neural_network_growth_multiple(N_steps, steps_at_cycle, initial_weights):
+
+    #Initialize score value.
+    score = 100000
+
+    weight_history = []
+
+    new_weights = initial_weights
+    weight_history.append(new_weights)
+
+    while score > 100:
+
+        nano_arr = neural_network_growth_single_run(N_steps, steps_at_cycle, new_weights)
 
         #6. Score network policy, with Score = – |(Target Size – Mean Size)| – Size Stdev, will need to label and calculate size of each hole.
-        new_score = Score_Growth(growth_run.nano)
+        new_score = Score_Growth(nano_arr)
 
         #7. Accept or reject weight “step” with some MC probability.
-        if abs(score) < abs(new_score):
+        if abs(score) > abs(new_score):
 
             #Accept weights.
+            weights = new_weights
+            weight_history.append(new_weights)
             #Assign score.
             score = new_score
 
@@ -604,16 +617,18 @@ def neural_network_growth(N_steps, steps_at_cycle, initial_weights):
             #Accept/reject condition:
             if u <= prob:
                 #Accept weights.
+                weights = new_weights
+                weight_history.append(new_weights)
                 #Assign score.
                 score = new_score
+                #Keep arrangements.
             else:
                 pass
-
+        
         #8. Mutate weights.
-    
-    return weights
+        #new_weights = ...
 
-
+    return 
 #######################################################################
 
 #Main: Let's run some code:
