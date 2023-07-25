@@ -488,7 +488,7 @@ def growth_sim(num_epochs):
 #Function that scores growth based on mean nano cluster size     
 def Score_Growth(nano_array):
     
-    target_size = 100
+    target_size = 500
 
     nano_array[nano_array == 0] = 2
     nano_array[nano_array == 1] = 0 
@@ -498,6 +498,14 @@ def Score_Growth(nano_array):
 
     print(n)
 
+    for xy in range(label.shape[0]):
+        if label[xy,0] > 0 and label[xy,-1] > 0:
+            label[label == label[xy,-1]] = label[xy,0]
+        if label[0,xy] > 0 and label[-1,xy] > 0:
+            label[label == label[-1,xy]] = label[0,xy]
+    
+    summed_labels = sp.ndimage.sum_labels(nano_array,label,range(1,n+1))
+
     fig, ax = plt.subplots()
     shw = ax.imshow(label)
     bar = plt.colorbar(shw)
@@ -506,14 +514,6 @@ def Score_Growth(nano_array):
     plt.title('Hole Labelling for Nanoparticle Growth Simulation')
     bar.set_label('Hole Size')
     plt.show()
-
-    for xy in range(label.shape[0]):
-        if label[xy,0] > 0 and label[xy,-1] > 0:
-            label[label == label[xy,-1]] = label[xy,0]
-        if label[0,xy] > 0 and label[-1,xy] > 0:
-            label[label == label[-1,xy]] = label[0,xy]
-    
-    summed_labels = sp.ndimage.sum_labels(nano_array,label,range(1,n+1))
 
     print(summed_labels)
     
