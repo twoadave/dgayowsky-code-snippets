@@ -488,7 +488,7 @@ def growth_sim(num_epochs):
 #Function that scores growth based on mean nano cluster size     
 def Score_Growth(nano_array):
     
-    target_size = 500
+    target_size = 1000
 
     nano_array[nano_array == 0] = 2
     nano_array[nano_array == 1] = 0 
@@ -541,6 +541,82 @@ def Score_Growth(nano_array):
 
 #######################################################################
 
+def neural_network_growth(N_steps, steps_at_cycle, initial_weights):
+
+    #Initialize score value.
+    score = 10000
+
+    #1. Initialize growth simulation and neural network with random seed and particular weights, dictate total N steps.
+    iterations = N_steps/steps_at_cycle
+
+    #Declare our initial values for simulation,
+    x_dim = 1000
+    y_dim = 1000
+    frac = 0.2
+    nano_size = 3
+    KbT = 0.2
+    mu = -2.5
+    e_nn = 2
+    e_nl = 1.5
+    e_ll = 1
+    nano_mob = 30
+    n_nano = int(frac*(x_dim*y_dim)/(nano_size*nano_size))
+    seed = np.random.randint(1,100)
+
+    #Pass to class (Growth_NonPeriodic) object (growth_run)
+    growth_run = Growth_NonPeriodic(x_dim, y_dim, n_nano, KbT, mu, e_nn, e_nl, e_ll, nano_mob, nano_size, seed)
+
+    #Initialize nanoparticles:
+    growth_run.initialize_nano()
+
+    weights = initial_weights
+    total_steps = 0
+
+    #9. Repeat 1-8 until particular “goodness threshold” is reached.
+    while abs(score) > 50:
+
+        for i in range(iterations):
+            for j in range(steps_at_cycle):
+                
+                #2. Run growth for 50 steps (time-based) at fixed KbT.
+                growth_run.step_simulation()
+                total_steps += 1
+
+            #3. Input growth step number divided by N to neural network (meaning input in range 0-1).
+
+            NN_input = total_steps/N_steps
+
+            #4. Neural network suggests action (i.e. what KbT should be) that will elicit greater hole size.
+
+        #6. Score network policy, with Score = – |(Target Size – Mean Size)| – Size Stdev, will need to label and calculate size of each hole.
+        new_score = Score_Growth(growth_run.nano)
+
+        #7. Accept or reject weight “step” with some MC probability.
+        if abs(score) < abs(new_score):
+
+            #Accept weights.
+            #Assign score.
+            score = new_score
+
+        else: 
+            prob = math.exp((-1*(abs(new_score - score)))/(KbT))
+            u = np.random.uniform()
+            #Accept/reject condition:
+            if u <= prob:
+                #Accept weights.
+                #Assign score.
+                score = new_score
+            else:
+                pass
+
+        #8. Mutate weights.
+    
+    return weights
+
+
+#######################################################################
+
 #Main: Let's run some code:
 fluid_arr, nano_arr = growth_sim(1000)
 scores = Score_Growth(nano_arr)
+print(scores)
