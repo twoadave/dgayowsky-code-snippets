@@ -498,11 +498,13 @@ def Score_Growth(nano_array):
 
     print(n)
 
-    plt.imshow(label)
+    fig, ax = plt.subplots()
+    shw = ax.imshow(label)
+    bar = plt.colorbar(shw)
     plt.xlabel('Lattice Index')
     plt.ylabel('Lattice Index')
     plt.title('Hole Labelling for Nanoparticle Growth Simulation')
-    plt.colorbar(label)
+    bar.set_label('Hole Size')
     plt.show()
 
     for xy in range(label.shape[0]):
