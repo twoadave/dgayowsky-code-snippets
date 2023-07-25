@@ -496,12 +496,13 @@ def Score_Growth(nano_array):
     
     label, n = sp.ndimage.label(nano_array)
 
-    print(label)
+    print(n)
 
     plt.imshow(label)
     plt.xlabel('Lattice Index')
     plt.ylabel('Lattice Index')
     plt.title('Hole Labelling for Nanoparticle Growth Simulation')
+    plt.colorbar(label)
     plt.show()
 
     for xy in range(label.shape[0]):
@@ -511,6 +512,8 @@ def Score_Growth(nano_array):
             label[label == label[-1,xy]] = label[0,xy]
     
     summed_labels = sp.ndimage.sum_labels(nano_array,label,range(1,n+1))
+
+    print(summed_labels)
     
     return -abs(target_size-np.mean(summed_labels,where=summed_labels>0))
 
