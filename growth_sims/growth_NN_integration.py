@@ -486,7 +486,7 @@ def growth_sim(num_epochs):
 #######################################################################
 
 #Function that scores growth based on mean nano cluster size     
-def Score_Growth(nano_array):
+def score_growth(nano_array):
     
     target_size = 1000
 
@@ -505,20 +505,22 @@ def Score_Growth(nano_array):
             label[label == label[-1,xy]] = label[0,xy]
     
     summed_labels = sp.ndimage.sum_labels(nano_array,label,range(1,n+1))
-    print(label)
+    #print(label)
+
+    score = -abs(target_size-np.mean(summed_labels,where=summed_labels>0))
 
     fig, ax = plt.subplots()
     shw = ax.imshow(label)
     #bar = plt.colorbar(shw)
     plt.xlabel('Lattice Index')
     plt.ylabel('Lattice Index')
-    plt.title('Hole Differentiation for Nanoparticle Growth Simulation')
+    plt.title('Hole Differentiation for Nanoparticle Growth Simulation /n Target Size = ' + str(target_size) + ', Score = ' + str(score))
     #bar.set_label('Hole Size')
     plt.show()
 
-    print(summed_labels)
+    #print(summed_labels)
     
-    return -abs(target_size-np.mean(summed_labels,where=summed_labels>0))
+    return score
 
 #######################################################################
 
@@ -629,9 +631,10 @@ def neural_network_growth_multiple(N_steps, steps_at_cycle, initial_weights):
         #new_weights = ...
 
     return 
+
 #######################################################################
 
 #Main: Let's run some code:
-fluid_arr, nano_arr = growth_sim(1000)
-scores = Score_Growth(nano_arr)
-print(scores)
+
+fluid_array, nano_array = growth_sim(1000)
+score = score_growth(nano_array)
