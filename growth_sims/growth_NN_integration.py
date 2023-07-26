@@ -550,10 +550,20 @@ class NeuralNetwork(nn.Module):
 
 #######################################################################
 
+#Define function to plot growth simulation:
+def plot_growth(nano_arr, frac, score):
+
+    plt.imshow(nano_arr)
+    plt.xlabel('Lattice Index')
+    plt.ylabel('Lattice Index')
+    plt.title('Nanoparticle Placements in Liquid \n Fraction = ' + str(frac) + ', Score = ' + str(score) + ', Varying kbT by Neural Network')
+    plt.show()
+
+#Define function to perform single growth simulation:
 def neural_network_growth_single_run(N_steps, steps_at_cycle, model):
 
     #1. Initialize growth simulation and neural network with random seed and particular weights, dictate total N steps.
-    iterations = N_steps/steps_at_cycle
+    iterations = int(N_steps/steps_at_cycle)
 
     #Declare our initial values for simulation,
     x_dim = 1000
@@ -599,7 +609,7 @@ def neural_network_growth_single_run(N_steps, steps_at_cycle, model):
         #Send to simulation.
         growth_run.change_kbT(kbT_delta_pred)
     
-    return growth_run.nano
+    return growth_run.nano, frac
 
 #Define function to perform monte-carlo simulation over neural networks:
 def neural_network_growth_multiple(N_steps, steps_at_cycle):
@@ -621,7 +631,7 @@ def neural_network_growth_multiple(N_steps, steps_at_cycle):
 
     while abs(score) > 500:
 
-        nano_arr = neural_network_growth_single_run(N_steps, steps_at_cycle, model)
+        nano_arr, frac = neural_network_growth_single_run(N_steps, steps_at_cycle, model)
 
         #6. Score network policy, with Score = – |(Target Size – Mean Size)| – Size Stdev, will need to label and calculate size of each hole.
         new_score = score_growth(nano_arr)
@@ -652,7 +662,10 @@ def neural_network_growth_multiple(N_steps, steps_at_cycle):
         new_weights = torch.normal(mean= model.layer_1.weight, std=torch.full(model.layer_1.weight.shape, 0.01))
         model.layer_1.weight = torch.nn.Parameter(new_weights)
 
-    return score, new_weights, nano_arr
+    #Plot our final growth: 
+    plot_growth(nano_arr, frac, score)
+    
+    return new_weights
 
 #######################################################################
 
@@ -661,4 +674,4 @@ def neural_network_growth_multiple(N_steps, steps_at_cycle):
 #fluid_array, nano_array = growth_sim(1000)
 #score = score_growth(nano_array)
 
-score, new_weights, nano_arr = neural_network_growth_multiple(1000, 500)
+new_weights = neural_network_growth_multiple(1000, 500)
