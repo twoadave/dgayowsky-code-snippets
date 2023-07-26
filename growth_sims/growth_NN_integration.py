@@ -433,6 +433,10 @@ class Growth_NonPeriodic:
             for i in range(self.n_nano_placed):
                 self.step_nano()
 
+    #Function that modifies kbT:
+    def change_kbT(self, delta_kbt):
+        self.KbT = self.KbT + delta_kbt
+
 #######################################################################
 
 #Function to actually run our code:
@@ -514,7 +518,7 @@ def score_growth(nano_array):
     #bar = plt.colorbar(shw)
     plt.xlabel('Lattice Index')
     plt.ylabel('Lattice Index')
-    plt.title('Hole Differentiation for Nanoparticle Growth Simulation /n Target Size = ' + str(target_size) + ', Score = ' + str(score))
+    plt.title('Hole Differentiation for Nanoparticle Growth Simulation \n Target Size = ' + str(target_size) + ', Score = ' + str(score))
     #bar.set_label('Hole Size')
     plt.show()
 
@@ -525,25 +529,28 @@ def score_growth(nano_array):
 #######################################################################
 
 #Create class for our NN:
-'''class NeuralNetwork(nn.Module):
+class NeuralNetwork(nn.Module):
     
+    #Define neural network structure with init:
     def __init__(self):
         super(NeuralNetwork, self).__init__()
-        # Input 16 spins, then increase number of nodes, then decrease to number
-        #of classes ie. number of possible energy states.
-        self.layer_1 = nn.Linear(16, 64) 
-        self.layer_2 = nn.Linear(64, 32)
-        self.layer_out = nn.Linear(32, 15) 
-        
-        self.relu = nn.ReLU()
-        #self.soft = nn.Softmax(dim = 0)
-        #self.dropout = nn.Dropout(p=0.2)
-        self.batchnorm1 = nn.BatchNorm1d(64)
-        self.batchnorm2 = nn.BatchNorm1d(32)'''
+        self.layer_1 = nn.Linear(1, 16) 
+        self.activation_1 = nn.ReLU()
+        self.layer_2 = nn.Linear(16, 32) 
+        self.activation_2 = nn.ReLU()
+        self.layer_out = nn.Linear(32, 1)
+        self.activation_out = nn.Tanh()
+
+    #Define forward pass across layers with functions:
+    def forward(self, inputs):
+        x = self.activation_1(self.layer_1(inputs))
+        x = self.activation_2(self.layer_2(x))
+        x = self.activation_out(self.layer_out(x))
+        return x
 
 #######################################################################
 
-def neural_network_growth_single_run(N_steps, steps_at_cycle, weights):
+def neural_network_growth_single_run(N_steps, steps_at_cycle, model):
 
     #1. Initialize growth simulation and neural network with random seed and particular weights, dictate total N steps.
     iterations = N_steps/steps_at_cycle
@@ -579,62 +586,79 @@ def neural_network_growth_single_run(N_steps, steps_at_cycle, weights):
             total_steps += 1
 
         #3. Input growth step number divided by N to neural network (meaning input in range 0-1).
-
         NN_input = total_steps/N_steps
+        #Convert to tensor before we send it:
+        NN_input = torch.tensor(NN_input, dtype=torch.float32)
+
+        #loss_fn = nn.CrossEntropyLoss()
+        #optimizer = optim.Adam(model.parameters(), learning_rate=0.001)
 
         #4. Neural network suggests action (i.e. what KbT should be) that will elicit greater hole size.
+        kbT_delta_pred = model(NN_input)
+
+        #Send to simulation.
+        growth_run.change_kbT(kbT_delta_pred)
     
     return growth_run.nano
 
 #Define function to perform monte-carlo simulation over neural networks:
-def neural_network_growth_multiple(N_steps, steps_at_cycle, initial_weights):
+def neural_network_growth_multiple(N_steps, steps_at_cycle):
 
     #Initialize score value.
-    score = 100000
+    score = 1000000000
 
     weight_history = []
 
-    new_weights = initial_weights
-    weight_history.append(new_weights)
+    #new_weights = initial_weights
+    #weight_history.append(new_weights)
 
-    while score > 100:
+    #Initialize neural network:
+    model = NeuralNetwork().to(device)
 
-        nano_arr = neural_network_growth_single_run(N_steps, steps_at_cycle, new_weights)
+    #Grab initial weights:
+    new_weights = model.layer_1.weight
+    weights = model.layer_1.weight
+
+    while abs(score) > 500:
+
+        nano_arr = neural_network_growth_single_run(N_steps, steps_at_cycle, model)
 
         #6. Score network policy, with Score = – |(Target Size – Mean Size)| – Size Stdev, will need to label and calculate size of each hole.
-        new_score = Score_Growth(nano_arr)
+        new_score = score_growth(nano_arr)
 
         #7. Accept or reject weight “step” with some MC probability.
         if abs(score) > abs(new_score):
-
-            #Accept weights.
+            #Keep weights and append to weight history.
             weights = new_weights
-            weight_history.append(new_weights)
+            #weight_history.append(new_weights)
             #Assign score.
             score = new_score
-
         else: 
-            prob = math.exp((-1*(abs(new_score - score)))/(KbT))
+            prob = math.exp(-1*(abs(new_score - score)))
             u = np.random.uniform()
             #Accept/reject condition:
             if u <= prob:
-                #Accept weights.
+                #Keep weights and append to weight history.
                 weights = new_weights
-                weight_history.append(new_weights)
+                #weight_history.append(new_weights)
                 #Assign score.
                 score = new_score
                 #Keep arrangements.
             else:
-                pass
+                #Go back to the old weights!
+                model.layer_1.weight = torch.nn.Parameter(weights)
         
         #8. Mutate weights.
-        #new_weights = ...
+        new_weights = torch.normal(mean= model.layer_1.weight, std=torch.full(model.layer_1.weight.shape, 0.01))
+        model.layer_1.weight = torch.nn.Parameter(new_weights)
 
-    return 
+    return score, new_weights, nano_arr
 
 #######################################################################
 
 #Main: Let's run some code:
 
-fluid_array, nano_array = growth_sim(1000)
-score = score_growth(nano_array)
+#fluid_array, nano_array = growth_sim(1000)
+#score = score_growth(nano_array)
+
+score, new_weights, nano_arr = neural_network_growth_multiple(1000, 500)
