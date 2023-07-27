@@ -37,7 +37,8 @@ from torchvision import datasets, transforms
 from torch.utils.data import Dataset, TensorDataset, DataLoader
 from torch.utils.data.dataset import random_split
 
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
+#device = 'cuda' if torch.cuda.is_available() else 'cpu'
+device = 'cpu'
 
 #######################################################################
 
@@ -437,6 +438,10 @@ class Growth_NonPeriodic:
     def change_kbT(self, delta_kbt):
         self.KbT = self.KbT + delta_kbt
 
+    #Function that returns kbT:
+    def return_kbT(self):
+        return self.KbT
+
 #######################################################################
 
 #Function to actually run our code:
@@ -513,14 +518,14 @@ def score_growth(nano_array):
 
     score = -abs(target_size-np.mean(summed_labels,where=summed_labels>0))
 
-    fig, ax = plt.subplots()
+    '''fig, ax = plt.subplots()
     shw = ax.imshow(label)
     #bar = plt.colorbar(shw)
     plt.xlabel('Lattice Index')
     plt.ylabel('Lattice Index')
     plt.title('Hole Differentiation for Nanoparticle Growth Simulation \n Target Size = ' + str(target_size) + ', Score = ' + str(score))
     #bar.set_label('Hole Size')
-    plt.show()
+    plt.show()'''
 
     #print(summed_labels)
     
@@ -551,12 +556,12 @@ class NeuralNetwork(nn.Module):
 #######################################################################
 
 #Define function to plot growth simulation:
-def plot_growth(nano_arr, frac, score):
+def plot_growth(nano_arr, frac, score, final_kbT):
 
     plt.imshow(nano_arr)
     plt.xlabel('Lattice Index')
     plt.ylabel('Lattice Index')
-    plt.title('Nanoparticle Placements in Liquid \n Fraction = ' + str(frac) + ', Score = ' + str(score) + ', Varying kbT by Neural Network')
+    plt.title('Nanoparticle Placements in Liquid \n Fraction = ' + str(frac) + ', Score = ' + str(score) + '\n Varying kbT by Neural Network, Final kbT = ' + str(final_kbT))
     plt.show()
 
 #Define function to perform single growth simulation:
@@ -599,6 +604,8 @@ def neural_network_growth_single_run(N_steps, steps_at_cycle, model):
         NN_input = total_steps/N_steps
         #Convert to tensor before we send it:
         NN_input = torch.tensor(NN_input, dtype=torch.float32)
+        #Need to add another dim...
+        NN_input = NN_input.unsqueeze(0)
 
         #loss_fn = nn.CrossEntropyLoss()
         #optimizer = optim.Adam(model.parameters(), learning_rate=0.001)
@@ -606,10 +613,17 @@ def neural_network_growth_single_run(N_steps, steps_at_cycle, model):
         #4. Neural network suggests action (i.e. what KbT should be) that will elicit greater hole size.
         kbT_delta_pred = model(NN_input)
 
+        print(kbT_delta_pred.item())
+
+        kbT_pred_value = kbT_delta_pred.item()
+
         #Send to simulation.
-        growth_run.change_kbT(kbT_delta_pred)
+        growth_run.change_kbT(kbT_pred_value)
     
-    return growth_run.nano, frac
+    #Grab our final kbT, just to show we've changed it.
+    final_kbT = growth_run.return_kbT()
+    
+    return growth_run.nano, frac, final_kbT
 
 #Define function to perform monte-carlo simulation over neural networks:
 def neural_network_growth_multiple(N_steps, steps_at_cycle):
@@ -629,9 +643,9 @@ def neural_network_growth_multiple(N_steps, steps_at_cycle):
     new_weights = model.layer_1.weight
     weights = model.layer_1.weight
 
-    while abs(score) > 500:
+    while abs(score) > 200:
 
-        nano_arr, frac = neural_network_growth_single_run(N_steps, steps_at_cycle, model)
+        nano_arr, frac, final_kbT = neural_network_growth_single_run(N_steps, steps_at_cycle, model)
 
         #6. Score network policy, with Score = – |(Target Size – Mean Size)| – Size Stdev, will need to label and calculate size of each hole.
         new_score = score_growth(nano_arr)
@@ -663,8 +677,8 @@ def neural_network_growth_multiple(N_steps, steps_at_cycle):
         model.layer_1.weight = torch.nn.Parameter(new_weights)
 
     #Plot our final growth: 
-    plot_growth(nano_arr, frac, score)
-    
+    plot_growth(nano_arr, frac, score, final_kbT)
+
     return new_weights
 
 #######################################################################
