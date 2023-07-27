@@ -505,7 +505,7 @@ def score_growth(nano_array):
     
     label, n = sp.ndimage.label(nano_array)
 
-    print(label)
+    #print(label)
 
     for xy in range(label.shape[0]):
         if label[xy,0] > 0 and label[xy,-1] > 0:
@@ -556,12 +556,16 @@ class NeuralNetwork(nn.Module):
 #######################################################################
 
 #Define function to plot growth simulation:
-def plot_growth(nano_arr, frac, score, final_kbT):
+def plot_growth(nano_array, frac, score, final_kbT):
 
-    plt.imshow(nano_arr)
+    nano_array[nano_array == 0] = 2
+    nano_array[nano_array == 1] = 0 
+    nano_array[nano_array == 2] = 1
+
+    plt.imshow(nano_array)
     plt.xlabel('Lattice Index')
     plt.ylabel('Lattice Index')
-    plt.title('Nanoparticle Placements in Liquid \n Fraction = ' + str(frac) + ', Score = ' + str(score) + '\n Varying kbT by Neural Network, Final kbT = ' + str(final_kbT))
+    plt.title('Nanoparticle Placements in Liquid \n Fraction = ' + str(frac) + ', Score = ' + str(round(score, 2)) + '\n Varying kbT by Neural Network, kbT = ' + str(round(final_kbT, 3)))
     plt.show()
 
 #Define function to perform single growth simulation:
@@ -613,7 +617,7 @@ def neural_network_growth_single_run(N_steps, steps_at_cycle, model):
         #4. Neural network suggests action (i.e. what KbT should be) that will elicit greater hole size.
         kbT_delta_pred = model(NN_input)
 
-        print(kbT_delta_pred.item())
+        #print(kbT_delta_pred.item())
 
         kbT_pred_value = kbT_delta_pred.item()
 
@@ -631,7 +635,7 @@ def neural_network_growth_multiple(N_steps, steps_at_cycle):
     #Initialize score value.
     score = 1000000000
 
-    weight_history = []
+    score_history = []
 
     #new_weights = initial_weights
     #weight_history.append(new_weights)
@@ -649,6 +653,8 @@ def neural_network_growth_multiple(N_steps, steps_at_cycle):
 
         #6. Score network policy, with Score = – |(Target Size – Mean Size)| – Size Stdev, will need to label and calculate size of each hole.
         new_score = score_growth(nano_arr)
+
+        score_history.append(new_score)
 
         #7. Accept or reject weight “step” with some MC probability.
         if abs(score) > abs(new_score):
@@ -676,8 +682,21 @@ def neural_network_growth_multiple(N_steps, steps_at_cycle):
         new_weights = torch.normal(mean= model.layer_1.weight, std=torch.full(model.layer_1.weight.shape, 0.01))
         model.layer_1.weight = torch.nn.Parameter(new_weights)
 
+        #plot_growth(nano_arr, frac, score, final_kbT)
+
+        if len(score_history) == 20:
+            break
+
     #Plot our final growth: 
     plot_growth(nano_arr, frac, score, final_kbT)
+
+    #Plot our score over a maximum of 20 iterations:
+    iteration_vals = np.arange(1, len(score_history)+1, 1)
+    plt.plot(iteration_vals, score_history, marker ='o', markersize = 2)
+    plt.xlabel('Epoch (Network Pass) Number')
+    plt.ylabel('Score')
+    plt.title('Score Progression of Growth Simulation')
+    plt.show()
 
     return new_weights
 
@@ -688,4 +707,4 @@ def neural_network_growth_multiple(N_steps, steps_at_cycle):
 #fluid_array, nano_array = growth_sim(1000)
 #score = score_growth(nano_array)
 
-new_weights = neural_network_growth_multiple(1000, 500)
+new_weights = neural_network_growth_multiple(1000, 50)
