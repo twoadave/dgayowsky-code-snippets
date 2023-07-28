@@ -471,8 +471,28 @@ def growth_sim(num_epochs):
     for i in range(num_epochs):
         growth_run.step_simulation()
 
+        if (i % 25) == 0:
+
+            #Now grab our arrays and make a picture.
+            nano_array = copy.deepcopy(growth_run.nano)
+            nano_array[nano_array == 1] = 2
+
+            config = growth_run.fluid + nano_array
+
+            script_dir = os.path.dirname(__file__)
+            results_dir = os.path.join(script_dir, 'Results/')
+
+            if not os.path.isdir(results_dir):
+                os.makedirs(results_dir)
+
+            plt.imshow(config)
+            plt.xlabel('Lattice Index')
+            plt.ylabel('Lattice Index')
+            plt.title('Nanoparticle Placements in Liquid \n kbT = ' + str(KbT) + ', Fraction = ' + str(frac) + ', ' + str(num_epochs) + ' Epochs')
+            plt.savefig(results_dir + 'kbt_' + str(int(KbT*10)) + '_frac_' + str(int(frac*10)) + '_' + str(i) + 'epochs_fin.png')
+
     #Now grab our arrays and make a picture.
-    nano_array = copy.deepcopy(growth_run.nano)
+    '''nano_array = copy.deepcopy(growth_run.nano)
     nano_array[nano_array == 1] = 2
 
     config = growth_run.fluid + nano_array
@@ -487,7 +507,7 @@ def growth_sim(num_epochs):
     plt.xlabel('Lattice Index')
     plt.ylabel('Lattice Index')
     plt.title('Nanoparticle Placements in Liquid \n kbT = ' + str(KbT) + ', Fraction = ' + str(frac) + ', ' + str(num_epochs) + ' Epochs')
-    plt.savefig(results_dir + 'kbt_' + str(int(KbT*10)) + '_frac_' + str(int(frac*10)) + '_' + str(num_epochs) + 'epochs_fin.png')
+    plt.savefig(results_dir + 'kbt_' + str(int(KbT*10)) + '_frac_' + str(int(frac*10)) + '_' + str(num_epochs) + 'epochs_fin.png')'''
     plt.show()
 
     return growth_run.fluid, growth_run.nano
@@ -699,6 +719,10 @@ def neural_network_growth_multiple(N_steps, steps_at_cycle):
     plt.show()
 
     return new_weights
+
+#######################################################################
+
+#Define function to run our simulation and generate plots at certain time steps
 
 #######################################################################
 
