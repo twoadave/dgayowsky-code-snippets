@@ -12,45 +12,32 @@ Simple crossword bot for uOttawa Trivia Discord server.
 import discord
 import os 
 import asyncio
+from discord.ext import commands
 
 #######################################################################
-
-#Define a function to allow a user to ask for instructions:
-
-#Define a function to allow a user to set a crossword clue:
-
-#Define a function to allow a user to answer the crossword:
-
-#Define a function to evaluate crossword answer:
-
-#######################################################################
-
-def get_chelp():
-    msg = 'Hello! Looks like you need some help with Crossword Bot. \n \
-                To start a crossword puzzle, type $crossword followed by \
-                <clue> <number of letters> <answer>. \n \
-                To answer the current crossword puzzle, type $cans followed by <answer>. \n \
-                To cancel your current crossword puzzle, type $ccancel, which will reveal the answer. \n \
-                To check points, type $cpoints, which will display the top 5 goals and assists points. \n \
-                Happy crosswording!'
-    return(msg)
-
-class MyClient(discord.Client):
-
-    async def on_ready(self):
-        print(f'Logged on as {self.user}!')
-
-    async def on_message(self, message):
-        #Don't reply to ourselves...
-        if message.author.id == self.user.id:
-            return
-        
-        if message.content.startswith('$chelp'):
-            helpmessage = get_chelp()
-            await message.reply(helpmessage, mention_author=True)
 
 intents = discord.Intents.default()
+intents.members = True
 intents.message_content = True
+
+#######################################################################
+
+cdescription = '''A crossword bot to allow you to play crosswords with your friends.'''
+
+bot = commands.Bot(command_prefix='$c', description=cdescription, intents=intents)
+
+#Bot login.
+@bot.event
+async def on_ready():
+    print(f'Logged in as {bot.user} (ID: {bot.user.id})')
+    print('------')
+
+#Define a bot command to set a new crossword puzzle.
+@bot.command(description='Set a crossword puzzle')
+async def crossword(ctx, clue, numletters: int, answer):
+    await ctx.send(f"{ctx.author.mention} has declared a new crossword challenge! Your challenge is: \n {clue}, {numletters} letters.")
+
+#######################################################################
 
 client = MyClient(intents=intents)
 
