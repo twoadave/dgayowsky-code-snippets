@@ -92,4 +92,4 @@ async def crossword(ctx, clue, numletters: int, answer):
 
 #client = MyClient(intents=intents)
 
-bot.run('MTEzNTAwMjY1Nzk5NjY3MzA4NQ.GIPmPX.eCduy3bUyodCRHIH0XETh8_3UOMIxEUG7qG1T0')
+bot.run('TOKEN ID HERE')
