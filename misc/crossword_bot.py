@@ -33,10 +33,17 @@ async def on_ready():
     print('------')
 
 #Define a bot command to set a new crossword puzzle.
-@bot.command(description='Set a crossword puzzle')
+@bot.command(description='Set a crossword puzzle.')
 async def crossword(ctx, clue, numletters: int, answer):
     await ctx.message.delete()
     await ctx.send(f"{ctx.author.mention} has declared a new crossword challenge! Your challenge is: \n {clue}, {numletters} letters.")
+
+#Define a bot command to try and answer the crossword puzzle.
+@bot.command(description='Answer the current crossword puzzle.')
+async def ans(ctx, userans):
+    if userans == answer:
+        return
+
 
 #######################################################################
 
