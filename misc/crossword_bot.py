@@ -35,10 +35,11 @@ async def on_ready():
 #Define a bot command to set a new crossword puzzle.
 @bot.command(description='Set a crossword puzzle')
 async def crossword(ctx, clue, numletters: int, answer):
+    await ctx.message.delete()
     await ctx.send(f"{ctx.author.mention} has declared a new crossword challenge! Your challenge is: \n {clue}, {numletters} letters.")
 
 #######################################################################
 
-client = MyClient(intents=intents)
+#client = MyClient(intents=intents)
 
-client.run(os.getenv('TOKEN'))
+bot.run(os.getenv('TOKEN'))
