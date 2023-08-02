@@ -452,7 +452,7 @@ def growth_sim(num_epochs):
     y_dim = 1000
     frac = 0.2
     nano_size = 3
-    KbT = 0.25
+    KbT = 0.18
     mu = -2.5
     e_nn = 2
     e_nl = 1.5
@@ -471,7 +471,10 @@ def growth_sim(num_epochs):
     for i in range(num_epochs):
         growth_run.step_simulation()
 
-        if (i % 25) == 0:
+        if (i % 100) == 0:
+            growth_run.change_kbT(0.01)
+
+        if (i % 10) == 0:
 
             #Now grab our arrays and make a picture.
             nano_array = copy.deepcopy(growth_run.nano)
@@ -489,7 +492,7 @@ def growth_sim(num_epochs):
             plt.xlabel('Lattice Index')
             plt.ylabel('Lattice Index')
             plt.title('Nanoparticle Placements in Liquid \n kbT = ' + str(KbT) + ', Fraction = ' + str(frac) + ', ' + str(i) + ' Epochs')
-            plt.savefig(results_dir + 'kbt_' + str(int(KbT*10)) + '_frac_' + str(int(frac*10)) + '_' + str(i) + 'epochs_fin.png')
+            plt.savefig(results_dir + '_frac_' + str(int(frac*10)) + '_' + str(i) + 'epochs_fin.png')
 
     #Now grab our arrays and make a picture.
     '''nano_array = copy.deepcopy(growth_run.nano)
@@ -734,4 +737,4 @@ def neural_network_growth_multiple(N_steps, steps_at_cycle):
 
 #new_weights = neural_network_growth_multiple(1000, 50)
 
-growth_sim(1000)
+growth_sim(650)
