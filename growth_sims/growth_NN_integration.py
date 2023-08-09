@@ -437,6 +437,7 @@ class Growth_NonPeriodic:
     #Function that modifies kbT:
     def change_kbT(self, delta_kbt):
         self.KbT = self.KbT + delta_kbt
+        return self.KbT
 
     #Function that returns kbT:
     def return_kbT(self):
@@ -452,7 +453,7 @@ def growth_sim(num_epochs):
     y_dim = 1000
     frac = 0.2
     nano_size = 3
-    KbT = 0.18
+    KbT = 0.2
     mu = -2.5
     e_nn = 2
     e_nl = 1.5
@@ -471,8 +472,9 @@ def growth_sim(num_epochs):
     for i in range(num_epochs):
         growth_run.step_simulation()
 
-        if (i % 100) == 0:
-            growth_run.change_kbT(0.01)
+        if ((i % 100) == 0) and (i != 0):
+            KbT = growth_run.change_kbT(0.02)
+            print(KbT)
 
         if (i % 10) == 0:
 
@@ -491,8 +493,8 @@ def growth_sim(num_epochs):
             plt.imshow(config)
             plt.xlabel('Lattice Index')
             plt.ylabel('Lattice Index')
-            plt.title('Nanoparticle Placements in Liquid \n kbT = ' + str(KbT) + ', Fraction = ' + str(frac) + ', ' + str(i) + ' Epochs')
-            plt.savefig(results_dir + '_frac_' + str(int(frac*10)) + '_' + str(i) + 'epochs_fin.png')
+            plt.title('Nanoparticle Placements in Liquid \n kbT = ' + str(round(KbT,3)) + ', Fraction = ' + str(frac) + ', ' + str(i) + ' Epochs')
+            plt.savefig(results_dir + 'frac_' + str(int(frac*10)) + '_' + str(i) + 'epochs_fin.png')
 
     #Now grab our arrays and make a picture.
     '''nano_array = copy.deepcopy(growth_run.nano)
