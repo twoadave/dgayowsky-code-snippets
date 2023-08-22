@@ -728,7 +728,53 @@ def neural_network_growth_multiple(N_steps, steps_at_cycle):
 
 #######################################################################
 
-#Define function to run our simulation and generate plots at certain time steps
+#Define function to run multiple growth simulations in tandem, no neural network, and score them:
+def simultaneous_growths(num_epochs, N_growths):
+
+    #Declare our values for simulation,
+    x_dim = 500
+    y_dim = 500
+    frac = 0.2
+    nano_size = 3
+    KbT = 0.23
+    mu = -2.5
+    e_nn = 2
+    e_nl = 1.5
+    e_ll = 1
+    nano_mob = 30
+    n_nano = int(frac*(x_dim*y_dim)/(nano_size*nano_size))
+
+    scores = []
+
+    #For however many growths we want:
+    for i in range(N_growths):
+
+        seed = np.random.randint(1,100)
+
+        #Pass to class (Growth_NonPeriodic) object (growth_run)
+        growth_run = Growth_NonPeriodic(x_dim, y_dim, n_nano, KbT, mu, e_nn, e_nl, e_ll, nano_mob, nano_size, seed)
+
+        #Initialize nanoparticles:
+        growth_run.initialize_nano()
+
+        #Now actually run the simulation for the number of epochs we want:
+        for j in range(num_epochs):
+            growth_run.step_simulation()
+
+        #Now calculate the final score of our growth:
+        growth_score = score_growth(growth_run.nano)
+        scores.append(growth_score)
+
+    #Plot our scores:
+    mean_score = np.mean(scores)
+    iteration_vals = np.arange(1, len(scores)+1, 1)
+    plt.plot(iteration_vals, scores, marker ='o', markersize = 4, linewidth=0, color='b')
+    plt.axhline(y = mean_score, color = 'r', linestyle = '-', linewidth=1)
+    plt.xlabel('Growth Number')
+    plt.ylabel('Score')
+    plt.title('Growth Simulation Scores \n KbT = ' + str(KbT) + ', Filling Fraction = ' + str(frac))
+    plt.xticks(iteration_vals)
+    plt.show()
 
 #######################################################################
 
@@ -739,4 +785,6 @@ def neural_network_growth_multiple(N_steps, steps_at_cycle):
 
 #new_weights = neural_network_growth_multiple(1000, 50)
 
-growth_sim(650)
+#growth_sim(650)
+
+simultaneous_growths(500, 30)
