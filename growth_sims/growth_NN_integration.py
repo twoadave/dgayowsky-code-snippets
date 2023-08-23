@@ -767,12 +767,13 @@ def simultaneous_growths(num_epochs, N_growths):
 
     #Plot our scores:
     mean_score = np.mean(scores)
+    std_dev = np.std(scores)
     iteration_vals = np.arange(1, len(scores)+1, 1)
-    plt.plot(iteration_vals, scores, marker ='o', markersize = 4, linewidth=0, color='b')
-    plt.axhline(y = mean_score, color = 'r', linestyle = '-', linewidth=1)
+    plt.plot(iteration_vals, scores, marker ='o', markersize = 4, linewidth=0, color='b', label='Growth Scores')
+    plt.axhline(y = mean_score, color = 'r', linestyle = '-', linewidth=1, label='Mean Score')
     plt.xlabel('Growth Number')
     plt.ylabel('Score')
-    plt.title('Growth Simulation Scores \n KbT = ' + str(KbT) + ', Filling Fraction = ' + str(frac))
+    plt.title('Growth Simulation Scores \n KbT = ' + str(KbT) + ', Filling Fraction = ' + str(frac) + '\n Standard Deviation = ' + str(round(std_dev, 3)))
     #plt.xticks(iteration_vals)
     plt.show()
 
@@ -787,4 +788,4 @@ def simultaneous_growths(num_epochs, N_growths):
 
 #growth_sim(650)
 
-simultaneous_growths(500, 100)
+simultaneous_growths(500, 30)
