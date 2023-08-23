@@ -732,11 +732,10 @@ def neural_network_growth_multiple(N_steps, steps_at_cycle):
 def simultaneous_growths(num_epochs, N_growths):
 
     #Declare our values for simulation,
-    x_dim = 500
-    y_dim = 500
+    x_dim = 600
+    y_dim = 600
     frac = 0.2
     nano_size = 3
-    KbT = 0.22
     mu = -2.5
     e_nn = 2
     e_nl = 1.5
@@ -750,6 +749,7 @@ def simultaneous_growths(num_epochs, N_growths):
     for i in range(N_growths):
 
         seed = np.random.randint(1,100)
+        KbT = 0.2
 
         #Pass to class (Growth_NonPeriodic) object (growth_run)
         growth_run = Growth_NonPeriodic(x_dim, y_dim, n_nano, KbT, mu, e_nn, e_nl, e_ll, nano_mob, nano_size, seed)
@@ -760,6 +760,11 @@ def simultaneous_growths(num_epochs, N_growths):
         #Now actually run the simulation for the number of epochs we want:
         for j in range(num_epochs):
             growth_run.step_simulation()
+
+            #For our linear increase in kbt - comment this out if we want constant kbt.
+            if ((i % 100) == 0) and (i != 0):
+                KbT = growth_run.change_kbT(0.02)
+                print(KbT)
 
         #Now calculate the final score of our growth:
         growth_score = score_growth(growth_run.nano)
@@ -773,7 +778,7 @@ def simultaneous_growths(num_epochs, N_growths):
     plt.axhline(y = mean_score, color = 'r', linestyle = '-', linewidth=1, label='Mean Score')
     plt.xlabel('Growth Number')
     plt.ylabel('Score')
-    plt.title('Growth Simulation Scores \n KbT = ' + str(KbT) + ', Filling Fraction = ' + str(frac) + '\n Standard Deviation = ' + str(round(std_dev, 3)))
+    plt.title('Growth Simulation Scores \n Final KbT = ' + str(KbT) + ', Filling Fraction = ' + str(frac) + '\n Standard Deviation = ' + str(round(std_dev, 3)))
     #plt.xticks(iteration_vals)
     plt.legend(loc="upper left")
     plt.show()
@@ -789,4 +794,4 @@ def simultaneous_growths(num_epochs, N_growths):
 
 #growth_sim(650)
 
-simultaneous_growths(500, 30)
+simultaneous_growths(500, 50)
