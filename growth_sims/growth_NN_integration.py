@@ -736,7 +736,7 @@ def simultaneous_growths(num_epochs, N_growths):
     y_dim = 500
     frac = 0.2
     nano_size = 3
-    KbT = 0.23
+    KbT = 0.22
     mu = -2.5
     e_nn = 2
     e_nl = 1.5
@@ -775,6 +775,7 @@ def simultaneous_growths(num_epochs, N_growths):
     plt.ylabel('Score')
     plt.title('Growth Simulation Scores \n KbT = ' + str(KbT) + ', Filling Fraction = ' + str(frac) + '\n Standard Deviation = ' + str(round(std_dev, 3)))
     #plt.xticks(iteration_vals)
+    plt.legend(loc="upper left")
     plt.show()
 
 #######################################################################
