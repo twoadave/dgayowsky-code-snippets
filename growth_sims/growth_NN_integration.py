@@ -523,7 +523,7 @@ def growth_sim(num_epochs):
 #Function that scores growth based on mean nano cluster size     
 def score_growth(nano_array):
     
-    target_size = 1500
+    target_size = 2000
 
     nano_array[nano_array == 0] = 2
     nano_array[nano_array == 1] = 0 
@@ -778,7 +778,7 @@ def simultaneous_growths(num_epochs, N_growths):
     plt.axhline(y = mean_score, color = 'r', linestyle = '-', linewidth=1, label='Mean Score')
     plt.xlabel('Growth Number')
     plt.ylabel('Score')
-    plt.title('Growth Simulation Scores \n Final KbT = ' + str(KbT) + ', Filling Fraction = ' + str(frac) + '\n Standard Deviation = ' + str(round(std_dev, 3)))
+    plt.title('Growth Simulation Scores \n Filling Fraction = ' + str(frac) + '\n Standard Deviation = ' + str(round(std_dev, 3)))
     #plt.xticks(iteration_vals)
     plt.legend(loc="upper left")
     plt.show()
