@@ -6,6 +6,7 @@ Various cryptohack challenges.'''
 
 import base64
 from Crypto.Util.number import *
+from pwn import *
 
 ################################################################
 
@@ -49,3 +50,12 @@ def general_encoding_long():
     print(flag)
     return None
 #general_encoding_long()
+
+#General-XOR-Starter
+def general_xor_starter():
+    flag = pwnlib.util.fiddling.xor('label', 13)
+    print(flag)
+    return None
+#general_xor_starter()
+
+#General-XOR-Properties
